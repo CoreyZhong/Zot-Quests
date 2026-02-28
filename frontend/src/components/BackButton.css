@@ -1,43 +1,65 @@
 .back-button {
   position: fixed;
   top: 1rem;
-  left: 1rem;
+  left: 0.5rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  background: rgba(100, 149, 237, 0.2);
+  justify-content: center;
+  background: transparent;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 25px;
+  padding: 0;
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: bold;
-  color: #2c3e50;
   transition: all 0.3s ease;
   z-index: 1000;
+  width: 100px;
+  height: 100px;
+  outline: none;
 }
 
-.back-button:hover {
-  background: rgba(100, 149, 237, 0.3);
-  transform: scale(1.05);
+.back-button:hover,
+.back-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.back-button:hover .back-icon {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(8%) saturate(1637%) hue-rotate(169deg) brightness(95%) contrast(88%) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.back-button span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #ffffff;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .back-icon {
-  width: 30px;
-  height: 30px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(25%) sepia(12%) saturate(1037%) hue-rotate(169deg) brightness(95%) contrast(88%);
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(18%) sepia(8%) saturate(1637%) hue-rotate(169deg) brightness(95%) contrast(88%);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .back-button {
-    padding: 0.5rem 1rem;
+    width: 60px;
+    height: 60px;
+  }
+
+  .back-button span {
     font-size: 0.9rem;
   }
 
   .back-icon {
-    width: 25px;
-    height: 25px;
+    width: 60px;
+    height: 60px;
   }
 }
