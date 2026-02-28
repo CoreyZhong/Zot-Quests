@@ -1,0 +1,15 @@
+/* Shared/Common page styles for Zot Quests */
+
+.page-container {
+  min-height: 100vh;
+  padding: 2rem;
+  padding-top: 5rem;
+  position: relative;
+}
+
+.page-title {
+  text-align: center;
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin: 2rem 0;
+}

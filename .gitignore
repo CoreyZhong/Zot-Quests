@@ -1,0 +1,25 @@
+# Environment and secrets (do not commit)
+.env
+.env.local
+.env.*.local
+frontend/.env
+
+# Dependencies
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv
+venv/
+
+# Build / output
+dist/
+build/
+*.egg-info/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.log

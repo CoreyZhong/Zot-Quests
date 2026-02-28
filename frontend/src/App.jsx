@@ -1,42 +1,92 @@
-import { useState } from "react";
-
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { GameProvider, useGame } from "./context/GameContext";
+import Header from "./components/Header";
+import Toast from "./components/Toast";
+import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Landing from "./pages/Landing";
+import OpenTasks from "./pages/OpenTasks";
+import ProofOfCompletion from "./pages/ProofOfCompletion";
+import CompletedTasks from "./pages/CompletedTasks";
+import PetrCollection from "./pages/PetrCollection";
+import { useAuth } from "@/contexts/AuthContext";
 import "./App.css";
 
-import RandomItem from "@/components/RandomItem";
-
 /*
-This is the starting point of our application. Here, we can begin coding 
-and transforming this page into whatever best suits our needs. 
-For example, we can start by creating a login page, home page, or an about section; 
-there are many ways to get your application up and running. 
-With App.jsx, we can also define global variables and routes to store information as well as page navigation.
+Zot Quests - Side Quest Generator for Real Life
+AI generates random side quests for UCI students to accomplish within a given time frame.
+Complete quests to earn coins and customize your Petr (anteater pet)!
+Auth: Supabase (useAuth). When logged in, GameProvider gets supabaseUser so game state stays in sync.
 */
-function App() {
-	const [count, setCount] = useState(0);
+
+function AppContent() {
+	const { currentPage, isLoggedIn, toast, hideToast } = useGame();
+
+	if (!isLoggedIn) {
+		return <Login />;
+	}
+
+	const renderPage = () => {
+		switch (currentPage) {
+			case "landing":
+				return <Landing />;
+			case "openTasks":
+				return <OpenTasks />;
+			case "proof":
+				return <ProofOfCompletion />;
+			case "completedTasks":
+				return <CompletedTasks />;
+			case "petrCollection":
+				return <PetrCollection />;
+			default:
+				return <Landing />;
+		}
+	};
 
 	return (
-		<>
-			<div>
-				<a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank" rel="noreferrer">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-			</div>
-			<h1>Vite + React</h1>
-			<div className="card">
-				<button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-				<p>
-					Edit <code>src/App.jsx</code> and save to test HMR
-				</p>
+		<div className="app">
+			<Header />
+			{renderPage()}
+			{toast && (
+				<Toast
+					message={toast.message}
+					type={toast.type}
+					onClose={hideToast}
+				/>
+			)}
+		</div>
+	);
+}
 
-				<RandomItem maximum={1000} />
+function App() {
+	const { user, loading, signOut } = useAuth();
+
+	if (loading) {
+		return (
+			<div style={{ padding: "2rem", textAlign: "center" }}>
+				Loading…
 			</div>
-			<p className="read-the-docs">Click on the Vite and React logos to learn more</p>
-		</>
+		);
+	}
+
+	return (
+		<Routes>
+			<Route path="/reset-password" element={<ResetPassword />} />
+			<Route path="/forgot-password" element={<ForgotPassword />} />
+			<Route
+				path="*"
+				element={
+					!user ? (
+						<Login />
+					) : (
+						<GameProvider supabaseUser={user} signOut={signOut}>
+							<AppContent />
+						</GameProvider>
+					)
+				}
+			/>
+		</Routes>
 	);
 }
 

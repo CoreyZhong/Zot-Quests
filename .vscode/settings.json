@@ -1,0 +1,5 @@
+{
+	"python-envs.pythonProjects": [],
+	"python.terminal.useEnvFile": true,
+	"python.envFile": "${workspaceFolder}/backend/.env"
+}

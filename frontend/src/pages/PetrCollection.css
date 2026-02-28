@@ -1,0 +1,242 @@
+/* Petr Collection Page Styles */
+
+.petr-collection-page {
+  padding: 1rem;
+}
+
+.petr-collection-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Shop Section */
+.shop-section {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem;
+  border-radius: 15px;
+  height: fit-content;
+}
+
+.shop-section h2 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.shop-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.shop-item {
+  background: #ecf0f1;
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+.shop-item-info h4 {
+  margin: 0 0 0.5rem 0;
+}
+
+.outfit-cost {
+  font-weight: bold;
+  color: #f39c12;
+}
+
+.empty-shop {
+  text-align: center;
+  color: #7f8c8d;
+  padding: 1rem;
+}
+
+.buy-button {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.buy-button:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
+.reroll-button {
+  width: 100%;
+  background: #9b59b6;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.reroll-button:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.coins-display {
+  text-align: center;
+  background: #f39c12;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 10px;
+}
+
+/* Petr Display */
+.petr-display-section {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem;
+  border-radius: 15px;
+  text-align: center;
+}
+
+.petr-display {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.petr-base {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.petr-character {
+  max-width: 300px;
+  height: auto;
+  display: block;
+}
+
+.equipped-items {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.equipped-badge {
+  background: #3498db;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+/* Locker Section */
+.locker-section {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem;
+  border-radius: 15px;
+}
+
+.locker-section h2 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.locker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.locker-slot {
+  aspect-ratio: 1;
+  background: #ecf0f1;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.locker-slot.locked {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.locker-slot.owned {
+  background: #3498db;
+  color: white;
+}
+
+.locker-slot.equipped {
+  background: #27ae60;
+  border: 3px solid #f39c12;
+}
+
+.locker-slot:not(.locked):hover {
+  transform: scale(1.05);
+}
+
+.locked-indicator {
+  font-size: 2rem;
+}
+
+.empty-locker {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #7f8c8d;
+  padding: 2rem 1rem;
+}
+
+.equipped-indicator {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #f39c12;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.outfit-name {
+  word-wrap: break-word;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .petr-collection-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .locker-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
