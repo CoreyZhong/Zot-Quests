@@ -109,7 +109,7 @@ def extract_text_from_resp(resp: Any) -> str:
     if hasattr(resp, "text") and resp.text:
         return resp.text
     try:
-        return resp.candidates[0].content[0].text  # SDK common shape
+        return resp.candidates[0].content.parts[0].text  # SDK common shape
     except Exception:
         return str(resp)
 
