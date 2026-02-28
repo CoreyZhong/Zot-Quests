@@ -1,4 +1,5 @@
 import { GameProvider, useGame } from "./context/GameContext";
+import Header from "./components/Header";
 import Landing from "./pages/Landing";
 import OpenTasks from "./pages/OpenTasks";
 import ProofOfCompletion from "./pages/ProofOfCompletion";
@@ -33,7 +34,12 @@ function AppContent() {
 		}
 	};
 
-	return <div className="app">{renderPage()}</div>;
+	return (
+		<div className="app">
+			<Header />
+			{renderPage()}
+		</div>
+	);
 }
 
 function App() {

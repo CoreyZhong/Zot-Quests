@@ -1,12 +1,11 @@
 import { useGame } from '../context/GameContext';
 import { getRandomQuests } from '../data/quests';
 import { useState, useEffect } from 'react';
-import petrLogo from '../assets/petr.png';
 import './pages.css';
 import './OpenTasks.css';
 
 const OpenTasks = () => {
-  const { navigateTo, acceptQuest, completedQuests } = useGame();
+  const { acceptQuest, completedQuests } = useGame();
   const [availableQuests, setAvailableQuests] = useState([]);
 
   useEffect(() => {
@@ -22,11 +21,6 @@ const OpenTasks = () => {
 
   return (
     <div className="page-container">
-      <button className="back-button" onClick={() => navigateTo('landing')}>
-        <img src={petrLogo} alt="Back" className="back-icon" />
-        <span>Back</span>
-      </button>
-
       <h1 className="page-title">Tasks</h1>
 
       <div className="tasks-grid">

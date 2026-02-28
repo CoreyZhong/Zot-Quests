@@ -6,7 +6,6 @@ import './PetrCollection.css';
 
 const PetrCollection = () => {
   const { 
-    navigateTo, 
     coins, 
     ownedOutfits, 
     equippedOutfits, 
@@ -36,11 +35,6 @@ const PetrCollection = () => {
 
   return (
     <div className="page-container petr-collection-page">
-      <button className="back-button" onClick={() => navigateTo('landing')}>
-        <img src={petrLogo} alt="Back" className="back-icon" />
-        <span>Back</span>
-      </button>
-
       <h1 className="page-title">Petr Collection</h1>
 
       <div className="petr-collection-layout">

@@ -1,18 +1,12 @@
 import { useGame } from '../context/GameContext';
-import petrLogo from '../assets/petr.png';
 import './pages.css';
 import './CompletedTasks.css';
 
 const CompletedTasks = () => {
-  const { navigateTo, completedQuests } = useGame();
+  const { completedQuests } = useGame();
 
   return (
     <div className="page-container">
-      <button className="back-button" onClick={() => navigateTo('landing')}>
-        <img src={petrLogo} alt="Back" className="back-icon" />
-        <span>Back</span>
-      </button>
-
       <h1 className="page-title">Completed Tasks</h1>
 
       <div className="completed-tasks-content">
