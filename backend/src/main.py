@@ -19,7 +19,8 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-import api
+# import api
+from backend.src.api import app as api_app
 
 PUBLIC_DIRECTORY = Path("public")
 
@@ -27,13 +28,13 @@ PUBLIC_DIRECTORY = Path("public")
 app = FastAPI()
 
 # Send all requests to paths under `/api/*` to the API router
-app.mount("/api/", api.app)
+app.mount("/api", api_app)
 
 
 # Make the public files (HTML, JS, CSS, etc.) accessible on the server
 # With HTML mode, `index.html` is automatically loaded
-app.mount("/", StaticFiles(directory=PUBLIC_DIRECTORY, html=True), name="public")
-
+# app.mount("/", StaticFiles(directory=PUBLIC_DIRECTORY, html=True), name="public")
+app.mount("/", StaticFiles(directory="public", html=True), name="static")
 
 @app.exception_handler(status.HTTP_404_NOT_FOUND)
 async def not_found(req: Request, exc: HTTPException) -> FileResponse:
