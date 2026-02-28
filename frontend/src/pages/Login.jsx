@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import petrLogo from '../assets/petr.png';
@@ -16,10 +17,12 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginFailed, setLoginFailed] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoginFailed(false);
     setLoading(true);
 
     try {
@@ -66,6 +69,7 @@ const Login = () => {
       }
     } catch (err) {
       setError(err?.message ?? 'An error occurred. Please try again.');
+      if (!isSignupMode) setLoginFailed(true);
     } finally {
       setLoading(false);
     }
@@ -74,6 +78,7 @@ const Login = () => {
   const toggleMode = () => {
     setIsSignupMode(!isSignupMode);
     setError('');
+    setLoginFailed(false);
     setEmail('');
     setUsername('');
     setPassword('');
@@ -141,6 +146,15 @@ const Login = () => {
               className="form-input"
             />
           </div>
+
+          {!isSignupMode && loginFailed && (
+            <p className="toggle-text" style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+              Forgot password?{' '}
+              <Link to="/forgot-password" state={{ email }} className="toggle-button" style={{ display: 'inline' }}>
+                Reset it
+              </Link>
+            </p>
+          )}
 
           <div className="form-buttons">
             <button

@@ -1,7 +1,10 @@
+import { Routes, Route, Navigate } from "react-router-dom";
 import { GameProvider, useGame } from "./context/GameContext";
 import Header from "./components/Header";
 import Toast from "./components/Toast";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Landing from "./pages/Landing";
 import OpenTasks from "./pages/OpenTasks";
 import ProofOfCompletion from "./pages/ProofOfCompletion";
@@ -67,14 +70,23 @@ function App() {
 		);
 	}
 
-	if (!user) {
-		return <Login />;
-	}
-
 	return (
-		<GameProvider supabaseUser={user} signOut={signOut}>
-			<AppContent />
-		</GameProvider>
+		<Routes>
+			<Route path="/reset-password" element={<ResetPassword />} />
+			<Route path="/forgot-password" element={<ForgotPassword />} />
+			<Route
+				path="*"
+				element={
+					!user ? (
+						<Login />
+					) : (
+						<GameProvider supabaseUser={user} signOut={signOut}>
+							<AppContent />
+						</GameProvider>
+					)
+				}
+			/>
+		</Routes>
 	);
 }
 
