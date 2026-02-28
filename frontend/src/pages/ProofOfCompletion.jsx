@@ -38,15 +38,33 @@ const ProofOfCompletion = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUploadedImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+    const input = e.target;
+    const file = input && input.files ? input.files[0] : null;
+
+    if (!file) {
+      return;
     }
+
+    if (!file.type || !file.type.startsWith('image/')) {
+      alert('Please upload a valid image file.');
+      input.value = '';
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      alert('Image is too large. Please upload an image smaller than 5 MB.');
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUploadedImage(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = () => {
