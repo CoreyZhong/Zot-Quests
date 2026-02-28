@@ -1,11 +1,12 @@
 /* Landing Page Styles */
-
+/* Same entrance effect as Open Tasks / Completed Tasks (page-container fadeIn from App.css) */
 .landing-page {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   padding: 2rem;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .landing-content {
