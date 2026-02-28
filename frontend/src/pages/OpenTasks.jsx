@@ -1,6 +1,7 @@
 import { useGame } from '../context/GameContext';
 import { getRandomQuests } from '../data/quests';
 import { useState, useEffect } from 'react';
+import BackButton from '../components/BackButton';
 import './pages.css';
 import './OpenTasks.css';
 
@@ -21,6 +22,7 @@ const OpenTasks = () => {
 
   return (
     <div className="page-container">
+      <BackButton destination="landing" />
       <h1 className="page-title">Tasks</h1>
 
       <div className="tasks-grid">

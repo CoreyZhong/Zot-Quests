@@ -2,6 +2,7 @@ import { useGame } from '../context/GameContext';
 import { getOutfitById } from '../data/outfits';
 import petrLogo from '../assets/petr.png';
 import baseballCapImage from '../assets/clothing/baseball_cap.png';
+import BackButton from '../components/BackButton';
 import './pages.css';
 import './PetrCollection.css';
 
@@ -43,6 +44,7 @@ const PetrCollection = () => {
 
   return (
     <div className="page-container petr-collection-page">
+      <BackButton destination="landing" />
       <h1 className="page-title">Petr Collection</h1>
 
       <div className="petr-collection-layout">

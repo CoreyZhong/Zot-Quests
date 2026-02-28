@@ -1,5 +1,6 @@
 import { useGame } from '../context/GameContext';
 import { useState, useEffect } from 'react';
+import BackButton from '../components/BackButton';
 import './pages.css';
 import './ProofOfCompletion.css';
 
@@ -78,14 +79,15 @@ const ProofOfCompletion = () => {
   if (!activeQuest) {
     return (
       <div className="page-container">
+        <BackButton destination="openTasks" />
         <p>No active quest. Please select a quest from Open Tasks.</p>
-        <button onClick={() => navigateTo('openTasks')}>Go to Open Tasks</button>
       </div>
     );
   }
 
   return (
     <div className="page-container">
+      <BackButton destination="openTasks" />
       <h1 className="page-title">Proof of Completion</h1>
 
       <div className="proof-content">

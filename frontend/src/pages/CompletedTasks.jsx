@@ -1,4 +1,5 @@
 import { useGame } from '../context/GameContext';
+import BackButton from '../components/BackButton';
 import './pages.css';
 import './CompletedTasks.css';
 
@@ -7,6 +8,7 @@ const CompletedTasks = () => {
 
   return (
     <div className="page-container">
+      <BackButton destination="landing" />
       <h1 className="page-title">Completed Tasks</h1>
 
       <div className="completed-tasks-content">
