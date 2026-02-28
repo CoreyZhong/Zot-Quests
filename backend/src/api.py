@@ -73,7 +73,7 @@ def build_prompt(req: QuestRequest) -> str:
         Generate 3 quests given these constraints: \n
         - The quest must be fun and engaging for UCI students.\n
         - The quest must be safe and not encourage any dangerous behavior.\n
-        - The quest must be feasible to complete within a reasonable time frame (e.g. a hour)\n
+        - The quest must be feasible to complete within a reasonable time frame (e.g. an hour)\n
         - The quest must be appropriate for a college campus setting.\n
         - The quest must not involve any illegal activities.\n
         - The quest must not involve any activities that could cause harm to oneself or others.\n
