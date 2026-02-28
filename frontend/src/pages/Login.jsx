@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { useGame } from '../context/GameContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import petrLogo from '../assets/petr.png';
 import './Login.css';
 
+const USERNAME_MIN = 3;
+const USERNAME_MAX = 20;
+const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
+
 const Login = () => {
-  const { login, signup, navigateTo } = useGame();
+  const { signIn, signUp } = useAuth();
   const [isSignupMode, setIsSignupMode] = useState(false);
+  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,30 +23,58 @@ const Login = () => {
     setLoading(true);
 
     try {
-      let result;
       if (isSignupMode) {
-        result = signup(username, password);
-      } else {
-        result = login(username, password);
-      }
+        const trimmed = username.trim();
+        if (!trimmed) {
+          setError('Username is required.');
+          setLoading(false);
+          return;
+        }
+        if (trimmed.length < USERNAME_MIN || trimmed.length > USERNAME_MAX) {
+          setError(`Username must be ${USERNAME_MIN}-${USERNAME_MAX} characters.`);
+          setLoading(false);
+          return;
+        }
+        if (!USERNAME_REGEX.test(trimmed)) {
+          setError('Username can only use letters, numbers, and underscore.');
+          setLoading(false);
+          return;
+        }
 
-      if (result.success) {
+        const data = await signUp(email, password);
+        if (data?.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({ id: data.user.id, username: trimmed });
+          if (profileError) {
+            if (profileError.code === '23505' || /unique|duplicate/i.test(profileError.message)) {
+              setError('Username already taken. Please choose another.');
+            } else {
+              setError(profileError.message || 'Could not save username.');
+            }
+            setLoading(false);
+            return;
+          }
+        }
+        setEmail('');
         setUsername('');
         setPassword('');
-        navigateTo('landing');
       } else {
-        setError(result.error);
+        await signIn(email, password);
+        setEmail('');
+        setPassword('');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err?.message ?? 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const toggleMode = () => {
     setIsSignupMode(!isSignupMode);
     setError('');
+    setEmail('');
     setUsername('');
     setPassword('');
   };
@@ -58,19 +92,40 @@ const Login = () => {
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="username">
-              <span className="input-icon">👤</span>
+            <label htmlFor="email">
+              <span className="input-icon">✉️</span>
             </label>
             <input
-              type="text"
-              id="username"
-              placeholder="USERNAME"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              id="email"
+              placeholder="EMAIL"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
               className="form-input"
+              autoComplete="email"
             />
           </div>
+
+          {isSignupMode && (
+            <div className="form-group">
+              <label htmlFor="username">
+                <span className="input-icon">👤</span>
+              </label>
+              <input
+                type="text"
+                id="username"
+                placeholder="USERNAME"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+                className="form-input"
+                autoComplete="username"
+                minLength={USERNAME_MIN}
+                maxLength={USERNAME_MAX}
+              />
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="password">

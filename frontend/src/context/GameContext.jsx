@@ -12,9 +12,15 @@ export const useGame = () => {
   return context;
 };
 
-export const GameProvider = ({ children }) => {
-  // Load initial auth state from localStorage or use defaults
+export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseSignOut = null }) => {
+  // When Supabase user is provided, we are logged in via Supabase; otherwise fall back to localStorage mock
   const loadAuthState = () => {
+    if (supabaseUser) {
+      return {
+        isLoggedIn: true,
+        currentUser: { email: supabaseUser.email, id: supabaseUser.id },
+      };
+    }
     try {
       const saved = localStorage.getItem('zotQuestsAuth');
       if (saved) {
@@ -63,6 +69,16 @@ export const GameProvider = ({ children }) => {
 
   const [auth, setAuth] = useState(loadAuthState);
   const [state, setState] = useState(loadGameState);
+
+  // Keep auth in sync when supabaseUser is passed (e.g. after Supabase login)
+  useEffect(() => {
+    if (supabaseUser) {
+      setAuth({
+        isLoggedIn: true,
+        currentUser: { email: supabaseUser.email, id: supabaseUser.id },
+      });
+    }
+  }, [supabaseUser?.id]);
 
   // Save game state to localStorage
   useEffect(() => {
@@ -149,8 +165,11 @@ export const GameProvider = ({ children }) => {
   };
 
   const logout = () => {
+    if (supabaseSignOut) {
+      supabaseSignOut();
+    }
     setAuth({ isLoggedIn: false, currentUser: null });
-    setState(prev => ({ ...prev, currentPage: 'login' }));
+    setState(prev => ({ ...prev, currentPage: 'landing' }));
   };
 
   // Navigation
