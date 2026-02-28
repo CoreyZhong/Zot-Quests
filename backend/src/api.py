@@ -34,6 +34,9 @@ log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 root_logger = logging.getLogger()
 if not root_logger.handlers:
     logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
+root_logger = logging.getLogger()
+if not root_logger.handlers:
+    logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 
 
 # The decorator declares the function as a FastAPI route on the given path.
@@ -85,7 +88,7 @@ def build_prompt(req: QuestRequest) -> str:
         - find something anteater related\n
         - find a certain plants/trees(only if gemini is able to clearly identify them)\n
         - find and take a picture of someone with some type of clothing(that gemini can reliably identify)\n
-
+        
 
         "Each object must include the keys: title (string), description (string), verificationPrompt (string).\n"
         f"Category: {req.category}. Time limit: {req.timeLimitMinutes} minutes. Difficulty: {req.difficulty}.\n"
@@ -103,19 +106,67 @@ def extract_text_from_resp(resp: Any) -> str:
 
 
 def parse_json_from_text(text: str) -> Any:
+    # Validate that the parsed structure matches the expected quest shape.
+    def _is_valid_quests(parsed: Any) -> bool:
+        required = {"title", "description", "verificationPrompt"}
+        if isinstance(parsed, list):
+            if not parsed:
+                return False
+            for item in parsed:
+                if not isinstance(item, dict):
+                    return False
+                if not required.issubset(item.keys()):
+                    return False
+            return True
+        if isinstance(parsed, dict):
+            return required.issubset(parsed.keys())
+        return False
+
+    original_error = None
     try:
-        return json.loads(text)
-    except json.JSONDecodeError as original_error:
-        # Attempt to find the first valid JSON object/array within the text by
-        # scanning all non-greedy brace/bracketed substrings.
-        for m in re.finditer(r"(\{[\s\S]*?\}|\[[\s\S]*?\])", text):
-            candidate = m.group(0)
-            try:
-                return json.loads(candidate)
-            except json.JSONDecodeError:
-                continue
-        # If no candidate could be parsed as JSON, re-raise the original error.
+        parsed = json.loads(text)
+        if _is_valid_quests(parsed):
+            return parsed if isinstance(parsed, list) else [parsed]
+        # fallthrough to try extracting balanced outer JSON blocks
+    except json.JSONDecodeError as e:
+        original_error = e
+
+    # Scan the text for balanced outermost JSON objects/arrays and try to parse
+    # them. This finds the top-level balanced substring rather than inner
+    # non-greedy matches which may capture unintended fragments.
+    n = len(text)
+    i = 0
+    while i < n:
+        ch = text[i]
+        if ch not in "[{":
+            i += 1
+            continue
+        open_ch = ch
+        close_ch = "}" if open_ch == "{" else "]"
+        depth = 0
+        j = i
+        while j < n:
+            c = text[j]
+            if c == open_ch:
+                depth += 1
+            elif c == close_ch:
+                depth -= 1
+                if depth == 0:
+                    candidate = text[i : j + 1]
+                    try:
+                        parsed = json.loads(candidate)
+                        if _is_valid_quests(parsed):
+                            return parsed if isinstance(parsed, list) else [parsed]
+                    except json.JSONDecodeError:
+                        pass
+                    break
+            j += 1
+        i = j + 1
+
+    # No valid candidate found; re-raise the original parse error if available
+    if original_error is not None:
         raise original_error
+    raise ValueError("Failed to extract valid quest JSON from model response")
 
 
 
@@ -144,7 +195,11 @@ async def generate_quest(body: QuestRequest):
     try:
         resp = await run_in_threadpool(call_model)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Model call failed: {exc}") from exc
+        error_id = uuid.uuid4().hex
+        logger.exception("Model call failed (%s)", error_id)
+        # Log the exception server-side (stack trace) and return a safe, generic
+        # error to the client with an `error_id` for correlation.
+        raise HTTPException(status_code=502, detail={"error": "Model call failed", "error_id": error_id}) from exc
 
     text = extract_text_from_resp(resp)
 
