@@ -45,11 +45,6 @@ log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 root_logger = logging.getLogger()
 if not root_logger.handlers:
     logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
-root_logger = logging.getLogger()
-if not root_logger.handlers:
-    logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
-
-
 # The decorator declares the function as a FastAPI route on the given path.
 # This route in particular is a GET route at "/hello" which returns the example
 # dictionary as a JSON response with the status code 200 by default.
