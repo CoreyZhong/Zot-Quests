@@ -1,5 +1,6 @@
 import { GameProvider, useGame } from "./context/GameContext";
 import Header from "./components/Header";
+import Toast from "./components/Toast";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import OpenTasks from "./pages/OpenTasks";
@@ -17,7 +18,7 @@ Auth: Supabase (useAuth). When logged in, GameProvider gets supabaseUser so game
 */
 
 function AppContent() {
-	const { currentPage, isLoggedIn } = useGame();
+	const { currentPage, isLoggedIn, toast, hideToast } = useGame();
 
 	if (!isLoggedIn) {
 		return <Login />;
@@ -44,6 +45,13 @@ function AppContent() {
 		<div className="app">
 			<Header />
 			{renderPage()}
+			{toast && (
+				<Toast
+					message={toast.message}
+					type={toast.type}
+					onClose={hideToast}
+				/>
+			)}
 		</div>
 	);
 }

@@ -69,6 +69,7 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
 
   const [auth, setAuth] = useState(loadAuthState);
   const [state, setState] = useState(loadGameState);
+  const [toast, setToast] = useState(null);
 
   // Keep auth in sync when supabaseUser is passed (e.g. after Supabase login)
   useEffect(() => {
@@ -178,6 +179,15 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
     setState(prev => ({ ...prev, currentPage: page }));
   };
 
+  // Toast Management
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
+  const hideToast = () => {
+    setToast(null);
+  };
+
   // Quest Management
   const acceptQuest = (quest) => {
     setState(prev => ({
@@ -191,6 +201,9 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
 
   const completeQuest = () => {
     if (!state.activeQuest) return;
+
+    const questTitle = state.activeQuest.description;
+    const coinsEarned = state.activeQuest.coinReward;
 
     const newCompletedQuest = {
       ...state.activeQuest,
@@ -207,6 +220,11 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
       uploadedImage: null,
       currentPage: 'landing',
     }));
+
+    // Show success toast after navigation completes
+    setTimeout(() => {
+      showToast(`Side quest completed! +${coinsEarned} coins earned`, 'success');
+    }, 100);
   };
 
   const setUploadedImage = (imageDataUrl) => {
@@ -281,6 +299,7 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
     shopInventory: state.shopInventory,
     questStartTime: state.questStartTime,
     uploadedImage: state.uploadedImage,
+    toast,
     
     // Auth Actions
     login,
@@ -293,6 +312,7 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
     purchaseOutfit,
     equipOutfit,
     rerollShop,
+    hideToast,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
