@@ -1,5 +1,6 @@
 import { useGame } from '../context/GameContext';
 import './pages.css';
+import './Landing.css';
 
 const Landing = () => {
   const { navigateTo } = useGame();

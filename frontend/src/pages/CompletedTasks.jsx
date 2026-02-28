@@ -1,5 +1,6 @@
 import { useGame } from '../context/GameContext';
 import './pages.css';
+import './CompletedTasks.css';
 
 const CompletedTasks = () => {
   const { navigateTo, completedQuests } = useGame();

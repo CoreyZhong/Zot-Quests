@@ -2,6 +2,7 @@ import { useGame } from '../context/GameContext';
 import { getRandomQuests } from '../data/quests';
 import { useState, useEffect } from 'react';
 import './pages.css';
+import './OpenTasks.css';
 
 const OpenTasks = () => {
   const { navigateTo, acceptQuest, completedQuests } = useGame();

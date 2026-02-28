@@ -1,6 +1,7 @@
 import { useGame } from '../context/GameContext';
 import { outfits, getOutfitById } from '../data/outfits';
 import './pages.css';
+import './PetrCollection.css';
 
 const PetrCollection = () => {
   const { 

@@ -1,6 +1,7 @@
 import { useGame } from '../context/GameContext';
 import { useState, useEffect } from 'react';
 import './pages.css';
+import './ProofOfCompletion.css';
 
 const ProofOfCompletion = () => {
   const { 
