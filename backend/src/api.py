@@ -85,11 +85,11 @@ def build_prompt(req: QuestRequest) -> str:
         - find something anteater related\n
         - find a certain plants/trees(only if gemini is able to clearly identify them)\n
         - find and take a picture of someone with some type of clothing(that gemini can reliably identify)\n
-        """
+
 
         "Each object must include the keys: title (string), description (string), verificationPrompt (string).\n"
         f"Category: {req.category}. Time limit: {req.timeLimitMinutes} minutes. Difficulty: {req.difficulty}.\n"
-        "Generate 1 concise quest matching the constraints."
+        """
     )
 
 
