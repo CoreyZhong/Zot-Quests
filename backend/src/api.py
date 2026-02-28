@@ -105,11 +105,17 @@ def extract_text_from_resp(resp: Any) -> str:
 def parse_json_from_text(text: str) -> Any:
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
-        m = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", text)
-        if m:
-            return json.loads(m.group(0))
-        raise
+    except json.JSONDecodeError as original_error:
+        # Attempt to find the first valid JSON object/array within the text by
+        # scanning all non-greedy brace/bracketed substrings.
+        for m in re.finditer(r"(\{[\s\S]*?\}|\[[\s\S]*?\])", text):
+            candidate = m.group(0)
+            try:
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                continue
+        # If no candidate could be parsed as JSON, re-raise the original error.
+        raise original_error
 
 
 
