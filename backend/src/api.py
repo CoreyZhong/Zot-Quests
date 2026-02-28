@@ -5,7 +5,7 @@ $ fastapi dev src/api.py
 """
 
 import random
-from backend.src.verify import verify_quest_completion
+from verify import verify_quest_completion
 from fastapi import FastAPI, HTTPException, File, UploadFile
 
 # The app which manages all of the API routes
