@@ -66,18 +66,34 @@ export const GameProvider = ({ children }) => {
 
   // Save game state to localStorage
   useEffect(() => {
+    // Strip image data (e.g., data URL imageUrl fields) before persisting to avoid localStorage quota issues
+    const sanitizedCompletedQuests = Array.isArray(state.completedQuests)
+      ? state.completedQuests.map(({ imageUrl, ...rest }) => rest)
+      : [];
+
     const toSave = {
       coins: state.coins,
-      completedQuests: state.completedQuests,
+      completedQuests: sanitizedCompletedQuests,
       ownedOutfits: state.ownedOutfits,
       equippedOutfits: state.equippedOutfits,
     };
-    localStorage.setItem('zotQuestsState', JSON.stringify(toSave));
+
+    try {
+      localStorage.setItem('zotQuestsState', JSON.stringify(toSave));
+    } catch (error) {
+      console.error('Error saving game state to localStorage:', error);
+      // Graceful fallback: fail silently so the app continues to function without persistence
+    }
   }, [state.coins, state.completedQuests, state.ownedOutfits, state.equippedOutfits]);
 
   // Save auth state to localStorage
   useEffect(() => {
-    localStorage.setItem('zotQuestsAuth', JSON.stringify(auth));
+    try {
+      localStorage.setItem('zotQuestsAuth', JSON.stringify(auth));
+    } catch (error) {
+      console.error('Error saving auth state to localStorage:', error);
+      // Graceful fallback: authentication state will not persist across reloads if this fails
+    }
   }, [auth]);
 
   // Authentication Methods
