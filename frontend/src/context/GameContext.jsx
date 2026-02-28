@@ -33,6 +33,28 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
   };
 
   // Load initial game state from localStorage or use defaults
+  const normalizeEquippedOutfits = (savedEquippedOutfits, ownedOutfitIds = []) => {
+    if (!savedEquippedOutfits || typeof savedEquippedOutfits !== 'object') {
+      return {};
+    }
+
+    // New format: { selected: outfitId }
+    if (typeof savedEquippedOutfits.selected === 'number') {
+      const selectedId = savedEquippedOutfits.selected;
+      if (ownedOutfitIds.length === 0 || ownedOutfitIds.includes(selectedId)) {
+        return { selected: selectedId };
+      }
+      return {};
+    }
+
+    // Legacy format: { hat: 1, shirt: 6, ... } -> keep first valid item only
+    const legacyIds = Object.values(savedEquippedOutfits).filter(value => typeof value === 'number');
+    const firstOwnedLegacyId = legacyIds.find(id => ownedOutfitIds.includes(id));
+    const fallbackId = typeof firstOwnedLegacyId === 'number' ? firstOwnedLegacyId : legacyIds[0];
+
+    return typeof fallbackId === 'number' ? { selected: fallbackId } : {};
+  };
+
   const loadGameState = () => {
     try {
       const saved = localStorage.getItem('zotQuestsState');
@@ -44,7 +66,7 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
           completedQuests: parsed.completedQuests || [],
           activeQuest: null,
           ownedOutfits: parsed.ownedOutfits || [],
-          equippedOutfits: parsed.equippedOutfits || {},
+          equippedOutfits: normalizeEquippedOutfits(parsed.equippedOutfits, parsed.ownedOutfits || []),
           shopInventory: getRandomShopItems(3, parsed.ownedOutfits || []),
           questStartTime: null,
           uploadedImage: null,
@@ -255,17 +277,12 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
 
   const equipOutfit = (outfit) => {
     setState(prev => {
-      const newEquipped = { ...prev.equippedOutfits };
-      
-      // If already equipped, unequip it
-      if (newEquipped[outfit.type] === outfit.id) {
-        delete newEquipped[outfit.type];
-      } else {
-        // Otherwise, equip it (replacing any existing item of that type)
-        newEquipped[outfit.type] = outfit.id;
-      }
+      const selectedId = prev.equippedOutfits?.selected;
+      const nextEquippedOutfits = selectedId === outfit.id
+        ? {}
+        : { selected: outfit.id };
 
-      return { ...prev, equippedOutfits: newEquipped };
+      return { ...prev, equippedOutfits: nextEquippedOutfits };
     });
   };
 

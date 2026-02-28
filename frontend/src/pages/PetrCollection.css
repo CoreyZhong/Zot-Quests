@@ -120,10 +120,30 @@
   align-items: center;
 }
 
+.petr-character-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .petr-character {
   max-width: 300px;
   height: auto;
   display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.petr-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.petr-overlay-cap {
+  width: 200%;
+  left: 32%;
+  top: -43%;
+  transform: translateX(-50%);
 }
 
 .equipped-items {
