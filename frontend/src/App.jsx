@@ -1,5 +1,6 @@
 import { GameProvider, useGame } from "./context/GameContext";
 import Header from "./components/Header";
+import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import OpenTasks from "./pages/OpenTasks";
 import ProofOfCompletion from "./pages/ProofOfCompletion";
@@ -14,7 +15,12 @@ Complete quests to earn coins and customize your Petr (anteater pet)!
 */
 
 function AppContent() {
-	const { currentPage } = useGame();
+	const { currentPage, isLoggedIn } = useGame();
+
+	// If not logged in, show login page
+	if (!isLoggedIn) {
+		return <Login />;
+	}
 
 	// Conditional routing based on currentPage state
 	const renderPage = () => {

@@ -3,7 +3,7 @@ import petrLogo from '../assets/petr.png';
 import './Header.css';
 
 const Header = () => {
-  const { navigateTo, currentPage } = useGame();
+  const { navigateTo, currentPage, logout } = useGame();
 
   // Don't show header on landing page
   if (currentPage === 'landing') {
@@ -33,6 +33,12 @@ const Header = () => {
           >
             <img src={petrLogo} alt="Back" className="header-back-icon" />
             <span>Back</span>
+          </button>
+          <button 
+            className="header-logout-button" 
+            onClick={logout}
+          >
+            Logout
           </button>
         </div>
       </div>

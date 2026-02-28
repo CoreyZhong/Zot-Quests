@@ -13,8 +13,21 @@ export const useGame = () => {
 };
 
 export const GameProvider = ({ children }) => {
-  // Load initial state from localStorage or use defaults
-  const loadState = () => {
+  // Load initial auth state from localStorage or use defaults
+  const loadAuthState = () => {
+    try {
+      const saved = localStorage.getItem('zotQuestsAuth');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Error loading auth state:', error);
+    }
+    return { isLoggedIn: false, currentUser: null };
+  };
+
+  // Load initial game state from localStorage or use defaults
+  const loadGameState = () => {
     try {
       const saved = localStorage.getItem('zotQuestsState');
       if (saved) {
@@ -48,9 +61,10 @@ export const GameProvider = ({ children }) => {
     };
   };
 
-  const [state, setState] = useState(loadState);
+  const [auth, setAuth] = useState(loadAuthState);
+  const [state, setState] = useState(loadGameState);
 
-  // Save to localStorage whenever relevant state changes
+  // Save game state to localStorage
   useEffect(() => {
     const toSave = {
       coins: state.coins,
@@ -60,6 +74,68 @@ export const GameProvider = ({ children }) => {
     };
     localStorage.setItem('zotQuestsState', JSON.stringify(toSave));
   }, [state.coins, state.completedQuests, state.ownedOutfits, state.equippedOutfits]);
+
+  // Save auth state to localStorage
+  useEffect(() => {
+    localStorage.setItem('zotQuestsAuth', JSON.stringify(auth));
+  }, [auth]);
+
+  // Authentication Methods
+  const login = (username, password) => {
+    // Mock authentication - in future, this will call Supabase
+    if (!username || !password) {
+      return { success: false, error: 'Username and password are required' };
+    }
+    
+    try {
+      const users = JSON.parse(localStorage.getItem('zotQuestsUsers') || '{}');
+      const user = users[username];
+      
+      if (user && user.password === password) {
+        setAuth({ isLoggedIn: true, currentUser: { username } });
+        return { success: true };
+      }
+      return { success: false, error: 'Invalid username or password' };
+    } catch (error) {
+      return { success: false, error: 'Login failed' };
+    }
+  };
+
+  const signup = (username, password) => {
+    // Mock signup - in future, this will call Supabase
+    if (!username || !password) {
+      return { success: false, error: 'Username and password are required' };
+    }
+    
+    if (username.length < 3) {
+      return { success: false, error: 'Username must be at least 3 characters' };
+    }
+
+    if (password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters' };
+    }
+    
+    try {
+      const users = JSON.parse(localStorage.getItem('zotQuestsUsers') || '{}');
+      
+      if (users[username]) {
+        return { success: false, error: 'Username already exists' };
+      }
+      
+      users[username] = { password };
+      localStorage.setItem('zotQuestsUsers', JSON.stringify(users));
+      
+      setAuth({ isLoggedIn: true, currentUser: { username } });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Signup failed' };
+    }
+  };
+
+  const logout = () => {
+    setAuth({ isLoggedIn: false, currentUser: null });
+    setState(prev => ({ ...prev, currentPage: 'login' }));
+  };
 
   // Navigation
   const navigateTo = (page) => {
@@ -155,7 +231,11 @@ export const GameProvider = ({ children }) => {
   };
 
   const value = {
-    // State
+    // Auth State
+    isLoggedIn: auth.isLoggedIn,
+    currentUser: auth.currentUser,
+    
+    // Game State
     currentPage: state.currentPage,
     coins: state.coins,
     completedQuests: state.completedQuests,
@@ -166,7 +246,10 @@ export const GameProvider = ({ children }) => {
     questStartTime: state.questStartTime,
     uploadedImage: state.uploadedImage,
     
-    // Actions
+    // Auth Actions
+    login,
+    signup,
+    logout,
     navigateTo,
     acceptQuest,
     completeQuest,

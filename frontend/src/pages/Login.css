@@ -1,0 +1,196 @@
+/* Login Page Styles */
+
+.login-page {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #6495ED 0%, #87CEEB 100%);
+  padding: 2rem;
+}
+
+.login-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 3rem 2.5rem;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.login-petr-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+  object-fit: contain;
+}
+
+.login-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  letter-spacing: -1px;
+}
+
+.login-title .zot {
+  color: #2c3e50;
+}
+
+.login-title .quests {
+  color: #f1c40f;
+  margin-left: 0.5rem;
+}
+
+.login-form {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #bdc3c7;
+  padding-bottom: 0.75rem;
+}
+
+.input-icon {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+.form-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  outline: none;
+  color: #2c3e50;
+  font-family: inherit;
+}
+
+.form-input::placeholder {
+  color: #95a5a6;
+  font-size: 0.9rem;
+}
+
+.form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.login-button {
+  background: #3b5998;
+  color: white;
+}
+
+.login-button:hover:not(:disabled) {
+  background: #2d4373;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 89, 152, 0.3);
+}
+
+.signup-button {
+  background: #f1c40f;
+  color: #2c3e50;
+}
+
+.signup-button:hover:not(:disabled) {
+  background: #f39c12;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: #e74c3c;
+  color: white;
+  padding: 1rem;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.toggle-text {
+  text-align: center;
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.toggle-button {
+  border: none;
+  background: transparent;
+  color: #3b5998;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.toggle-button:hover:not(:disabled) {
+  color: #2d4373;
+}
+
+.toggle-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .login-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .login-title {
+    font-size: 2rem;
+  }
+
+  .login-petr-logo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .form-buttons {
+    flex-direction: column;
+  }
+
+  .auth-button {
+    width: 100%;
+  }
+}

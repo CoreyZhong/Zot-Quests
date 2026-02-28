@@ -64,6 +64,24 @@
   transform: scale(1.05);
 }
 
+.header-logout-button {
+  background: #e74c3c;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  transition: all 0.3s ease;
+  margin-left: 1rem;
+}
+
+.header-logout-button:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
 .header-back-icon {
   width: 30px;
   height: 30px;
@@ -89,6 +107,12 @@
   .header-back-button {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+  }
+
+  .header-logout-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
   }
 
   .header-back-icon {
