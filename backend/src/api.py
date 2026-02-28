@@ -74,29 +74,25 @@ def build_prompt(req: QuestRequest) -> str:
     # Force JSON-only output and give a short schema
     return (
         "Respond with ONLY a single valid JSON array of 3 quest objects and nothing else.\n"
-
-        """You are generating fun, safe side quests for UCI students.\n
-        Rules: \n
-        Generate 3 quests given these constraints: \n
-        - The quest must be fun and engaging for UCI students.\n
-        - The quest must be safe and not encourage any dangerous behavior.\n
-        - The quest must be feasible to complete within a reasonable time frame (e.g. an hour)\n
-        - The quest must be appropriate for a college campus setting.\n
-        - The quest must not involve any illegal activities.\n
-        - The quest must not involve any activities that could cause harm to oneself or others.\n
-        - The quest must not involve any activities that could damage property.\n
-        - The quest must not involve any activities that could be considered harassment or bullying.\n
-        - The quest includes taking a picture to prove that it has been completed at the end, so something that can be verified with a photo.\n
-        Some potential quest categories include:\n 
-        - find something with a certain color\n
-        - find something anteater related\n
-        - find a certain plants/trees(only if gemini is able to clearly identify them)\n
-        - find and take a picture of someone with some type of clothing(that gemini can reliably identify)\n
-        
-
+        "You are generating fun, safe side quests for UCI students.\n"
+        "Rules:\n"
+        "Generate 3 quests given these constraints:\n"
+        "- The quest must be fun and engaging for UCI students.\n"
+        "- The quest must be safe and not encourage any dangerous behavior.\n"
+        "- The quest must be feasible to complete within a reasonable time frame (e.g. an hour).\n"
+        "- The quest must be appropriate for a college campus setting.\n"
+        "- The quest must not involve any illegal activities.\n"
+        "- The quest must not involve any activities that could cause harm to oneself or others.\n"
+        "- The quest must not involve any activities that could damage property.\n"
+        "- The quest must not involve any activities that could be considered harassment or bullying.\n"
+        "- The quest includes taking a picture to prove that it has been completed at the end, so something that can be verified with a photo.\n"
+        "Some potential quest categories include:\n"
+        "- find something with a certain color\n"
+        "- find something anteater related\n"
+        "- find certain plants/trees (only if gemini is able to clearly identify them)\n"
+        "- find and take a picture of someone with some type of clothing (that gemini can reliably identify)\n"
         "Each object must include the keys: title (string), description (string), verificationPrompt (string).\n"
         f"Category: {req.category}. Time limit: {req.timeLimitMinutes} minutes. Difficulty: {req.difficulty}.\n"
-        """
     )
 
 
