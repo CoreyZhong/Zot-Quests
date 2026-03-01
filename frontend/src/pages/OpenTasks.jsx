@@ -40,6 +40,12 @@ const OpenTasks = () => {
     acceptQuest(quest);
   };
 
+  // Sort quests by difficulty: easy, medium, hard
+  const sortedQuests = [...availableQuests].sort((a, b) => {
+    const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
+    return (difficultyOrder[a.category] || 99) - (difficultyOrder[b.category] || 99);
+  });
+
   return (
     <div className="page-container">
       <BackButton destination="landing" />
@@ -66,7 +72,7 @@ const OpenTasks = () => {
         </div>
       ) : (
       <div className="tasks-grid">
-        {availableQuests.map((quest, index) => (
+        {sortedQuests.map((quest, index) => (
           <div key={quest.id} className="task-card">
             <div className="task-header">
               <h3>Task {index + 1}</h3>
