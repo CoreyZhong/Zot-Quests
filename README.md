@@ -88,7 +88,8 @@ The API will be available at `http://localhost:8000`.
 
 Create a `.env` file in the `frontend` directory:
 ```
-
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 Create a `.env` file in the `backend` directory:
