@@ -86,20 +86,6 @@ const OpenTasks = () => {
               <h3>Task {index + 1}</h3>
               <span className="task-category">{quest.category}</span>
             </div>
-            
-            <div className="task-content">
-              <div className="task-description">
-                {quest.description}
-              </div>
-              
-              <div className="task-info">
-                <div className="task-info-box">
-                  <p><strong>Time:</strong> {quest.timeLimit} min</p>
-                  <p><strong>Reward:</strong> {quest.coinReward} coins</p>
-                </div>
-              </div>
-            </div>
-
             <button 
               className="accept-button"
               onClick={() => handleAcceptQuest(quest)}

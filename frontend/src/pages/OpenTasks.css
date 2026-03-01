@@ -109,22 +109,6 @@
   font-size: 0.9rem;
 }
 
-.task-content {
-  margin-bottom: 1rem;
-}
-
-.task-description {
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-  color: #2c3e50;
-}
-
-.task-info-box {
-  background: #ecf0f1;
-  padding: 1rem;
-  border-radius: 10px;
-}
-
 .accept-button {
   width: 100%;
   background: #3498db;
