@@ -56,6 +56,7 @@ def build_prompt(_: QuestRequest | None = None) -> str:
         "- Vary the quests; ensure they are distinct and verifiable by a photo.\n"
         "Output must be only the JSON array (no Markdown, no commentary).\n"
         "Time limit should be random number that is a multiple of 5, between the range of 5 to 60 minutes.\n"
+        "Don't ask player to show their id, or any potentially sensitive personal info.\n"
     )
 
 
