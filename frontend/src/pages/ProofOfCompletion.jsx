@@ -151,7 +151,7 @@ const ProofOfCompletion = () => {
     return (
       <div className="page-container">
         <BackButton destination="openTasks" />
-        <p>No active quest. Please select a quest from Open Tasks.</p>
+        <p>No active quest. Please select a quest from Open Quests.</p>
       </div>
     );
   }

@@ -9,12 +9,12 @@ const CompletedTasks = () => {
   return (
     <div className="page-container">
       <BackButton destination="landing" />
-      <h1 className="page-title">Completed Tasks</h1>
+      <h1 className="page-title">Completed Quests</h1>
 
       <div className="completed-tasks-content">
         {completedQuests.length === 0 ? (
           <div className="empty-state">
-            <p>No completed tasks yet!</p>
+            <p>No completed quests yet!</p>
             <p>Complete quests to see them here.</p>
           </div>
         ) : (

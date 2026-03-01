@@ -16,7 +16,7 @@ const OpenTasks = () => {
       setError(null);
       refreshAvailableQuests()
         .catch(() => {
-          setError('Failed to load initial tasks');
+          setError('Failed to load initial quests');
         })
         .finally(() => {
           setLoading(false);
@@ -30,7 +30,7 @@ const OpenTasks = () => {
     try {
       await refreshAvailableQuests();
     } catch (err) {
-      setError(err.message ?? 'Failed to load tasks');
+      setError(err.message ?? 'Failed to load quests');
     } finally {
       setLoading(false);
     }
@@ -49,12 +49,12 @@ const OpenTasks = () => {
   return (
     <div className="page-container">
       <BackButton destination="landing" />
-      <h1 className="page-title">Tasks</h1>
+      <h1 className="page-title">Quests</h1>
 
       {error && (
         <div className="tasks-error">
           <p>{error}</p>
-          <p className="tasks-error-hint">Showing fallback tasks. You can retry for new AI-generated tasks.</p>
+          <p className="tasks-error-hint">Showing fallback quests. You can retry for new AI-generated quests.</p>
           <button type="button" className="retry-button" onClick={handleRetry} disabled={loading}>
             Retry
           </button>
@@ -63,7 +63,7 @@ const OpenTasks = () => {
 
       {loading ? (
         <div className="tasks-loading">
-          <p className="tasks-loading-text">Loading tasks</p>
+          <p className="tasks-loading-text">Loading quests</p>
           <span className="loading-dots" aria-hidden="true">
             <span className="loading-dot" />
             <span className="loading-dot" />
@@ -75,14 +75,14 @@ const OpenTasks = () => {
         {sortedQuests.map((quest, index) => (
           <div key={quest.id} className="task-card">
             <div className="task-header">
-              <h3>Task {index + 1}</h3>
+              <h3>Quest {index + 1}</h3>
               <span className="task-category">{quest.category}</span>
             </div>
             <button 
               className="accept-button"
               onClick={() => handleAcceptQuest(quest)}
             >
-              Accept Task
+              Accept Quest
             </button>
           </div>
         ))}

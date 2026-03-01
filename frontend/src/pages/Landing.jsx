@@ -26,7 +26,7 @@ const Landing = () => {
             onClick={() => navigateTo('openTasks')}
           >
             <div className="button-icon">📦</div>
-            <span>Open Tasks</span>
+            <span>Open Quests</span>
           </button>
 
           <button 
@@ -34,7 +34,7 @@ const Landing = () => {
             onClick={() => navigateTo('completedTasks')}
           >
             <div className="button-icon">✓</div>
-            <span>Completed Tasks</span>
+            <span>Completed Quests</span>
           </button>
 
           <button 
