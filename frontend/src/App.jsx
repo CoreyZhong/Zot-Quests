@@ -9,6 +9,7 @@ import OpenTasks from "./pages/OpenTasks";
 import ProofOfCompletion from "./pages/ProofOfCompletion";
 import CompletedTasks from "./pages/CompletedTasks";
 import PetrCollection from "./pages/PetrCollection";
+import Leaderboard from "./pages/Leaderboard";
 import { useAuth } from "@/contexts/AuthContext";
 import "./App.css";
 
@@ -20,10 +21,18 @@ Auth: Supabase (useAuth). When logged in, GameProvider gets supabaseUser so game
 */
 
 function AppContent() {
-	const { currentPage, isLoggedIn, toast, hideToast } = useGame();
+	const { currentPage, isLoggedIn, toast, hideToast, gameStateLoading } = useGame();
 
 	if (!isLoggedIn) {
 		return <Login />;
+	}
+
+	if (gameStateLoading) {
+		return (
+			<div className="app" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+				<p style={{ fontSize: "1.25rem", color: "#2c3e50" }}>Loading your progress…</p>
+			</div>
+		);
 	}
 
 	const renderPage = () => {
@@ -38,6 +47,8 @@ function AppContent() {
 				return <CompletedTasks />;
 			case "petrCollection":
 				return <PetrCollection />;
+			case "leaderboard":
+				return <Leaderboard />;
 			default:
 				return <Landing />;
 		}

@@ -1,0 +1,147 @@
+/* Leaderboard Page Styles */
+
+.leaderboard-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 15px;
+  font-size: 1.1rem;
+}
+
+.leaderboard-table {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-header {
+  display: grid;
+  grid-template-columns: 100px 1fr 150px 180px;
+  gap: 20px;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  align-items: center;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-rank {
+  text-align: center;
+}
+
+.leaderboard-username {
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.leaderboard-coins {
+  text-align: center;
+}
+
+.leaderboard-completed {
+  text-align: center;
+}
+
+.leaderboard-rows {
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 150px 180px;
+  gap: 20px;
+  padding: 1.25rem 1.5rem;
+  align-items: center;
+  border-bottom: 1px solid rgba(100, 150, 200, 0.2);
+  transition: background-color 0.2s ease;
+}
+
+.leaderboard-row:hover {
+  background-color: rgba(102, 126, 234, 0.05);
+}
+
+.leaderboard-row:last-child {
+  border-bottom: none;
+}
+
+.rank-badge {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.rank-1 {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+}
+
+.rank-2 {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+  color: #333;
+}
+
+.rank-3 {
+  background: linear-gradient(135deg, #cd7f32 0%, #d4a574 100%);
+  color: white;
+}
+
+.rank-badge:not(.rank-1):not(.rank-2):not(.rank-3) {
+  background: rgba(102, 126, 234, 0.15);
+  color: #667eea;
+  width: auto;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.95rem;
+}
+
+.leaderboard-username {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.leaderboard-coins {
+  font-weight: 600;
+  color: #f39c12;
+  font-size: 1.1rem;
+}
+
+.leaderboard-completed {
+  color: #667eea;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .leaderboard-header,
+  .leaderboard-row {
+    grid-template-columns: 60px 1fr 100px 100px;
+    gap: 10px;
+    padding: 1rem;
+  }
+
+  .leaderboard-username {
+    padding-left: 0.5rem;
+  }
+
+  .rank-badge {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+}

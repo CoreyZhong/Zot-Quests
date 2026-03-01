@@ -45,6 +45,14 @@ const Landing = () => {
             <span>Petr Collection</span>
           </button>
 
+          <button 
+            className="nav-button"
+            onClick={() => navigateTo('leaderboard')}
+          >
+            <div className="button-icon">🏆</div>
+            <span>Leaderboard</span>
+          </button>
+
           <button
             className="nav-button logout-button"
             onClick={logout}

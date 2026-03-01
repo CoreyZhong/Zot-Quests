@@ -9,7 +9,7 @@ const PetrCollection = () => {
   const { 
     coins, 
     ownedOutfits, 
-    equippedOutfits, 
+    equippedOutfits,
     shopInventory,
     purchaseOutfit,
     equipOutfit,
