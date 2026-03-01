@@ -125,6 +125,7 @@
 .petr-character-wrapper {
   position: relative;
   display: inline-block;
+  overflow: hidden;
 }
 
 .petr-character {
@@ -139,12 +140,69 @@
   position: absolute;
   pointer-events: none;
   z-index: 2;
+  animation: slideInOutfit 0.5s ease-out forwards;
+}
+
+@keyframes slideInOutfit {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .petr-overlay-cap {
   width: 200%;
   left: 32%;
   top: -43%;
+  transform: translateX(-50%);
+}
+
+.petr-overlay-outfit {
+  width: 100%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Baseball Cap */
+.petr-overlay--1 {
+  width: 200%;
+  left: 32%;
+  top: -43%;
+  transform: translateX(-50%);
+}
+
+/* Jersey */
+.petr-overlay--2 {
+  width: 265%;
+  left: 45%;
+  top: -63%;
+  transform: translateX(-50%);
+}
+
+/* Scarf */
+.petr-overlay--3 {
+  width: 265%;
+  left: 43%;
+  top: -58%;
+  transform: translateX(-50%);
+}
+
+/* Sunglasses */
+.petr-overlay--4 {
+  width: 265%;
+  left: 54%;
+  top: -50%;
+  transform: translateX(-50%);
+}
+
+/* Tuxedo */
+.petr-overlay--5 {
+  width: 265%;
+  left: 32%;
+  top: -53%;
   transform: translateX(-50%);
 }
 
@@ -212,9 +270,6 @@
   border: 3px solid #f39c12;
 }
 
-.locker-slot:not(.locked):hover {
-  transform: scale(1.05);
-}
 
 .locked-indicator {
   font-size: 2rem;

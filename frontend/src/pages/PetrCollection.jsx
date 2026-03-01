@@ -1,7 +1,6 @@
 import { useGame } from '../context/GameContext';
 import { getOutfitById } from '../data/outfits';
 import petrLogo from '../assets/petr.png';
-import baseballCapImage from '../assets/clothing/baseball_cap.png';
 import BackButton from '../components/BackButton';
 import './pages.css';
 import './PetrCollection.css';
@@ -59,7 +58,6 @@ const PetrCollection = () => {
                 <div key={outfit.id} className="shop-item">
                   <div className="shop-item-info">
                     <h4>{outfit.name}</h4>
-                    <p>{outfit.type}</p>
                     <p className="outfit-cost">{outfit.cost} coins</p>
                   </div>
                   <div className="shop-item-actions">
@@ -95,8 +93,13 @@ const PetrCollection = () => {
             <div className="petr-base">
               <div className="petr-character-wrapper">
                 <img src={petrLogo} alt="Petr the Anteater" className="petr-character" />
-                {selectedOutfit?.name === 'Baseball Cap' && (
-                  <img src={baseballCapImage} alt="Baseball Cap" className="petr-overlay petr-overlay-cap" />
+                {selectedOutfit?.imageUrl && (
+                  <img
+                    key={selectedOutfit.id}
+                    src={selectedOutfit.imageUrl}
+                    alt={selectedOutfit.name}
+                    className={`petr-overlay petr-overlay-outfit petr-overlay--${selectedOutfit.id}`}
+                  />
                 )}
               </div>
             </div>

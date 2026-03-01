@@ -9,55 +9,79 @@ with Supabase directly and send the Supabase access token to any protected
 endpoints on this API.
 """
 
+# standard library utilities used in this module
 from pathlib import Path
 import logging
 import os
 import random
 import uuid
 
+# dotenv loads `.env` so environment variables are available locally
 from dotenv import load_dotenv
 
+# explicitly load `.env` from workspace root, not cwd
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-from fastapi import Depends, FastAPI, HTTPException, UploadFile, File
+# FastAPI imports for routes, errors, uploads, and form data
+from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, Form
 
-from auth import CurrentUser, get_current_user
-from quest_generation import QuestRequest, generate_quests
-from quest_verification import verify_quest_image, verify_at_location
+# package-relative imports for project modules (src is a package)
 
+# (the FastAPI import above already covers all required symbols)
+
+# use package-relative imports so the module works when `src` is
+# imported as a package (`python -m uvicorn src.main`).
+from .auth import CurrentUser, get_current_user
+from .quest_generation import QuestRequest, generate_quests
+from .quest_verification import verify_quest_image, verify_at_location
+
+# FastAPI app instance; mounted at /api for frontend proxying
 app = FastAPI()
 
+# configure logging; LOG_LEVEL env var controls verbosity
 logger = logging.getLogger(__name__)
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 root_logger = logging.getLogger()
 if not root_logger.handlers:
     logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 
-# Location-based verification: id -> name + context for Gemini
+# friendly location IDs mapped to name/context for verification
 LOCATION_DATA = {
     "dbh": {"name": "Donald Bren Hall", "ctx": "6th floor balcony, glass railings, park view."},
     "fountain": {"name": "Infinity Fountain", "ctx": "Circular water feature, brick plaza."},
     "statue": {"name": "Anteater Statue", "ctx": "Bronze statue near Bren Events Center."},
 }
 
+# allowed MIME types for uploaded images; others are rejected
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/heic", "image/heif"}
 
 
 @app.get("/hello")
-async def hello() -> dict[str, str]:
-    """Get hello message."""
+async def hello():
+    # simple health check used during development
+    print("hello endpoint hit")
     return {"message": "Hello from FastAPI"}
 
 
 @app.get("/random")
 async def get_random_item(maximum: int) -> dict[str, int]:
-    """Get an item with a random ID."""
+    """Simple example route illustrating a query parameter.
+
+    Returns a JSON object containing a randomly‑chosen integer between zero
+    and ``maximum``. not used by the frontend but helpful when testing the
+    API server setup.
+    """
     return {"itemId": random.randint(0, maximum)}
 
 
 @app.post("/quests/generate")
 async def generate_quest(body: QuestRequest):
-    """Generate quests using Gemini. See quest_generation module."""
+    """Create a batch of quests using the text-generation model.
+
+    Expects a JSON body matching ``QuestRequest``. Errors are translated
+    into HTTPExceptions so callers receive a proper status code instead of
+    an unhandled traceback.
+    """
     try:
         return await generate_quests(body)
     except ValueError as e:
@@ -79,18 +103,31 @@ async def generate_quest(body: QuestRequest):
 
 @app.post("/verify-quest")
 async def verify_quest(
-    quest_description: str,
+    # frontend uses this endpoint to submit proof images
+    # quest_description form field from multipart data
+    quest_description: str = Form(...),
     image: UploadFile = File(...),
-    current_user: CurrentUser = Depends(get_current_user),
+    # auth optional during development; frontend doesn't send token yet
+    current_user: CurrentUser | None = Depends(get_current_user),
 ) -> dict[str, object]:
-    """Verify quest completion with an image. Protected; requires Bearer token."""
+    """Verify quest completion with an image."""
+    # log parameters for debugging and auth issues
+    print(f"verify_quest called: description={quest_description!r}, user={current_user}")
+    print(f"  received file content_type={image.content_type!r}, filename={image.filename!r}")
     content_type = image.content_type or "image/jpeg"
     if content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported file type")
     image_bytes = await image.read()
-    result = await verify_quest_image(quest_description, image_bytes, content_type)
+    try:
+        result = await verify_quest_image(quest_description, image_bytes, content_type)
+    except ValueError as ve:
+        # translate internal errors (e.g. bad image or AI failure) to a 502
+        raise HTTPException(status_code=502, detail=str(ve)) from ve
+
     return {
-        "userId": current_user.id,
+        # current_user may be None in development; the frontend doesn't rely on
+        # this value yet so just propagate null.
+        "userId": current_user.id if current_user is not None else None,
         "questDescription": quest_description,
         "verified": result["verified"],
         "reason": result["reason"],
@@ -100,7 +137,13 @@ async def verify_quest(
 
 @app.post("/verify/{location_id}")
 async def verify_image(location_id: str, file: UploadFile = File(...)) -> dict[str, object]:
-    """Verify that an uploaded image shows the given location. See quest_verification module."""
+    """Endpoint used by location‑specific checks.
+
+    The caller provides a path parameter identifying the location (e.g.
+    ``/verify/dbh``). the handler looks up the human-readable name and
+    contextual description, then delegates to the shared verification
+    logic in ``quest_verification``.
+    """
     content_type = file.content_type or "image/jpeg"
     if content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported file type")

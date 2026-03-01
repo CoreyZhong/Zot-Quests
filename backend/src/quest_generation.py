@@ -14,18 +14,21 @@ from pydantic import BaseModel
 from google import genai
 from starlette.concurrency import run_in_threadpool
 
+# model and env key names; debug mode enabled by env var
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 KEY_ENV = "QUEST_GENERATION_GEMINI_API_KEY"
 DEBUG_MODE = os.getenv("QUEST_DEBUG", "false").lower() in ("1", "true", "yes")
 
+# logger for warnings and debug output
 logger = logging.getLogger(__name__)
 
-# Thread-safe lazy singleton so we don't re-instantiate the client on every request.
+# thread-safe lazy initialization of GenAI client
 _client_lock = threading.Lock()
 _genai_client: genai.Client | None = None
 
 
 def _get_client() -> genai.Client:
+    """Return a shared GenAI client instance, constructing it if needed."""
     global _genai_client
     if _genai_client is not None:
         return _genai_client
@@ -45,32 +48,32 @@ class QuestRequest(BaseModel):
 
 
 def build_prompt(_: QuestRequest | None = None) -> str:
+    """Construct the natural language prompt sent to the Gemini model."""
     return (
         "Respond with ONLY a single valid JSON array of exactly 3 quest objects (one easy, one medium, one hard) and nothing else.\n"
         "Each quest must include: category (easy|medium|hard), description (string), timeLimit (integer minutes), coinReward (integer).\n"
         "Rules:\n"
         "- Fun, safe, campus-appropriate for University of California, Irvine students; no illegal/dangerous/harmful/harassing/damaging activities.\n"
         "- Feasible within the provided time limit.\n"
-        "- All quests should be completable within the University of California, Irvine campus."
+        "- All quests should be completable within the University of California, Irvine campus.\n"
         "- Difficulty mapping: easy, medium, hard.\n"
         "- Coin rewards: easy=3, medium=5, hard=7.\n"
         "- Vary the quests; ensure they are distinct and verifiable by a photo.\n"
-        "Some potential quest idea include but not limited to:\n"
+        "Some potential quest ideas include but are not limited to:\n"
         "- find something with a certain color\n"
         "- find something anteater related\n"
         "- find certain plants/trees (only if gemini is able to clearly identify them)\n"
         "- find and take a picture of someone with some type of clothing (that gemini can reliably identify)\n"
-        "- find a well-known building on campus"
+        "- find a well-known building on campus\n"
         "Output must be only the JSON array (no Markdown, no commentary).\n"
-        "Time limit should be random number that is a multiple of 5, between the range of 5 to 60 minutes, depending on the difficulty.\n"
-        ""
+        "Time limit should be a random number that is a multiple of 5, between 5 and 60 minutes, depending on the difficulty.\n"
         "Don't ask player to show their id, or any potentially sensitive personal info.\n"
-        "Users will complete their quests by submitting an image which will be verified through AI, ensure that generated quests are not easily falsifiable or exploitable through unrelated images."
-    
+        "Users will complete their quests by submitting an image which will be verified through AI; ensure that generated quests are not easily falsifiable or exploitable through unrelated images.\n"
     )
 
 
 def _extract_text_from_resp(resp: Any) -> str:
+    """Pull raw text out of various response object shapes."""
     if hasattr(resp, "text") and resp.text:
         return resp.text
     try:
@@ -80,6 +83,7 @@ def _extract_text_from_resp(resp: Any) -> str:
 
 
 def _parse_json_from_text(text: str) -> Any:
+    """Find and validate quest JSON inside arbitrary text."""
     def _is_valid_quests(parsed: Any) -> bool:
         required = {"category", "description", "timeLimit", "coinReward"}
         allowed_categories = {"easy", "medium", "hard"}
@@ -148,10 +152,7 @@ def _parse_json_from_text(text: str) -> Any:
 
 
 async def generate_quests(body: QuestRequest) -> list:
-    """
-    Call Gemini to generate quests. Returns list of quest dicts.
-    Raises ValueError for missing API key or parse failure; lets other exceptions propagate.
-    """
+    """Invoke the model and return parsed list of quests."""
     client = _get_client()
     prompt = build_prompt(body)
 

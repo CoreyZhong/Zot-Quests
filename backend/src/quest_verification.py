@@ -19,19 +19,23 @@ try:
 except ImportError:
     _PIL_AVAILABLE = False
 
+# model name and environment variable key for verification
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 KEY_ENV = "QUEST_VERIFICATION_GEMINI_API_KEY"
 
+# logger for this module
 logger = logging.getLogger(__name__)
 
 
 class VerificationResult(BaseModel):
+    """Schema for vision model's JSON response."""
     verified: bool
     reason: str
     confidence_score: int
 
 
 def _get_client():
+    """Return a new Gemini client using the verification API key."""
     api_key = os.environ.get(KEY_ENV)
     if not api_key:
         raise ValueError(f"Missing {KEY_ENV} environment variable")
@@ -39,7 +43,7 @@ def _get_client():
 
 
 def _get_gps_data(image_bytes: bytes) -> Any:
-    """Optional: pull GPS from photo EXIF if present. Logged for debugging."""
+    """Extract GPS metadata from image if PIL available."""
     if not _PIL_AVAILABLE:
         return None
     try:
@@ -53,17 +57,23 @@ def _get_gps_data(image_bytes: bytes) -> Any:
 
 
 def _call_vision_sync(prompt: str, image_bytes: bytes, mime_type: str) -> dict[str, Any]:
-    """Blocking Gemini vision call. Call via run_in_threadpool from async code."""
+    """Synchronous vision request; run inside threadpool."""
     client = _get_client()
     image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=[prompt, image_part],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=VerificationResult,
-        ),
-    )
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=[prompt, image_part],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=VerificationResult,
+            ),
+        )
+    except Exception as exc:
+        # translate errors from the GenAI client into something the API
+        # layer can understand. `ClientError` is thrown for 400/invalid args.
+        logger.exception("Vision model call failed")
+        raise ValueError("vision service error: %s" % exc) from exc
     return response.parsed.model_dump()
 
 
@@ -72,10 +82,7 @@ async def verify_quest_image(
     image_bytes: bytes,
     mime_type: str = "image/jpeg",
 ) -> dict[str, Any]:
-    """
-    Verify that an image shows completion of the given quest.
-    Returns {"verified": bool, "reason": str, "confidence_score": int}.
-    """
+    """Async wrapper that verifies quest image via vision call."""
     gps = _get_gps_data(image_bytes)
     logger.debug("Photo metadata (GPS): %s", gps)
     prompt = f"Verify whether this image shows the following quest completed: {quest_description}. Return verified=true only if the image clearly shows the described task completed."
@@ -88,10 +95,7 @@ async def verify_at_location(
     location_name: str,
     context: str,
 ) -> dict[str, Any]:
-    """
-    Verify that an image shows the given location. Used by POST /verify/{location_id}.
-    Returns {"verified": bool, "reason": str, "confidence_score": int}.
-    """
+    """Async check that image matches specified location name/context."""
     gps = _get_gps_data(image_bytes)
     logger.debug("Photo metadata (GPS): %s", gps)
     prompt = f"Verify if this image shows {location_name}. Context: {context}"
