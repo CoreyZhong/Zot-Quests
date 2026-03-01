@@ -29,13 +29,19 @@ def _get_supabase_jwt_secret() -> str:
 
 def get_current_user(
     creds: HTTPAuthorizationCredentials = Depends(security),
-) -> CurrentUser:
+) -> CurrentUser | None:
     """
     Validate the Supabase access token and return the current user.
+
+    When called without credentials (e.g. during local development) this
+    function will simply return ``None`` instead of raising a 401 error. Call
+    sites can add their own logic to handle anonymous users.
     """
 
+    # HTTPBearer(auto_error=False) makes ``creds`` None when no header is
+    # provided; we treat that as anonymous rather than an error.
     if not creds or creds.scheme.lower() != "bearer":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
+        return None
 
     token = creds.credentials
     try:

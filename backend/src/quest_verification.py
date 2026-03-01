@@ -56,14 +56,20 @@ def _call_vision_sync(prompt: str, image_bytes: bytes, mime_type: str) -> dict[s
     """Blocking Gemini vision call. Call via run_in_threadpool from async code."""
     client = _get_client()
     image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=[prompt, image_part],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=VerificationResult,
-        ),
-    )
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=[prompt, image_part],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=VerificationResult,
+            ),
+        )
+    except Exception as exc:
+        # translate errors from the GenAI client into something the API
+        # layer can understand. `ClientError` is thrown for 400/invalid args.
+        logger.exception("Vision model call failed")
+        raise ValueError("vision service error: %s" % exc) from exc
     return response.parsed.model_dump()
 
 

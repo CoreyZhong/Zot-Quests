@@ -16,6 +16,8 @@ const ProofOfCompletion = () => {
 
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [denialReason, setDenialReason] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [feedback, setFeedback] = useState('');
 
   useEffect(() => {
     if (!activeQuest || !questStartTime) return;
@@ -50,13 +52,13 @@ const ProofOfCompletion = () => {
     }
 
     if (!file.type || !file.type.startsWith('image/')) {
-      alert('Please upload a valid image file.');
+      setFeedback('Please upload a valid image file.');
       input.value = '';
       return;
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      alert('Image is too large. Please upload an image smaller than 5 MB.');
+      setFeedback('Image is too large. Please upload an image smaller than 5 MB.');
       input.value = '';
       return;
     }
@@ -68,12 +70,58 @@ const ProofOfCompletion = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // 1. Basic check
     if (!uploadedImage) {
-      alert('Please upload an image first!');
+      setFeedback('Please upload an image first!');
       return;
     }
-    completeQuest();
+
+    // 2. Start loading state
+    setIsLoading(true);
+    setDenialReason(''); 
+
+    try {
+      // 3. Grab the raw file from the hidden input field
+      const fileInput = document.getElementById('image-upload');
+      const file = fileInput.files[0];
+
+      // 4. Pack the data to send to your FastAPI
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('quest_description', activeQuest.description);
+
+      // 5. Send to your backend (FastAPI)
+      const response = await fetch('/api/verify-quest', {
+        method: 'POST',
+        body: formData,
+        // If your team uses Supabase Auth, we might need a header here later
+      });
+
+      if (!response.ok) {
+        // try to surface any error details from the backend instead of the
+        // generic "could not connect" message.
+        const text = await response.text();
+        throw new Error(`Backend error ${response.status}: ${text}`);
+      }
+
+      const data = await response.json();
+
+      // 6. Handle the AI's decision
+      if (data.verified) {
+        setFeedback('AI Verified: ' + data.reason);
+        completeQuest(); // This triggers the "Success" screen in your app
+      } else {
+        setDenialReason(data.reason); // Shows the "Why I failed" message on screen
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      // show the actual error message if available, otherwise fall back
+      const msg = error?.message || 'Could not connect to the AI server. Make sure your backend is running!';
+      setFeedback(msg);
+    } finally {
+      setIsLoading(false); // Stop the loading spinner
+    }
   };
 
   if (!activeQuest) {
@@ -121,14 +169,18 @@ const ProofOfCompletion = () => {
           {denialReason && (
             <p className="denial-reason">Reason for Denial: {denialReason}</p>
           )}
+          {feedback && (
+            <p className="feedback-message">{feedback}</p>
+          )}
         </div>
 
         <button 
-          className="submit-button"
-          onClick={handleSubmit}
-        >
-          Submit Image
-        </button>
+  className="submit-button"
+  onClick={handleSubmit}
+  disabled={isLoading}
+>
+  {isLoading ? 'AI is Checking...' : 'Submit Image'}
+</button>
       </div>
     </div>
   );
