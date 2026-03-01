@@ -64,20 +64,20 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
           currentPage: 'landing',
           coins: parsed.coins || 0,
           completedQuests: parsed.completedQuests || [],
-          activeQuest: null,
+          activeQuest: parsed.activeQuest || null,
           ownedOutfits: parsed.ownedOutfits || [],
           equippedOutfits: normalizeEquippedOutfits(parsed.equippedOutfits, parsed.ownedOutfits || []),
           shopInventory: getRandomShopItems(3, parsed.ownedOutfits || []),
-          questStartTime: null,
+          questStartTime: parsed.questStartTime ?? null,
           uploadedImage: null,
-          availableQuests: [],
-          openTasksInitialized: false,
+          availableQuests: parsed.availableQuests || [],
+          openTasksInitialized: parsed.openTasksInitialized ?? false,
         };
       }
     } catch (error) {
       console.error('Error loading saved state:', error);
     }
-    
+
     return {
       currentPage: 'landing',
       coins: 0,
@@ -119,6 +119,10 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
       completedQuests: sanitizedCompletedQuests,
       ownedOutfits: state.ownedOutfits,
       equippedOutfits: state.equippedOutfits,
+      activeQuest: state.activeQuest || null,
+      questStartTime: state.questStartTime ?? null,
+      availableQuests: state.availableQuests || [],
+      openTasksInitialized: state.openTasksInitialized ?? false,
     };
 
     try {
@@ -127,7 +131,7 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
       console.error('Error saving game state to localStorage:', error);
       // Graceful fallback: fail silently so the app continues to function without persistence
     }
-  }, [state.coins, state.completedQuests, state.ownedOutfits, state.equippedOutfits]);
+  }, [state.coins, state.completedQuests, state.ownedOutfits, state.equippedOutfits, state.activeQuest, state.questStartTime, state.availableQuests, state.openTasksInitialized]);
 
   // Save auth state to localStorage
   useEffect(() => {
@@ -235,6 +239,8 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
           ...prev,
           availableQuests: randomQuests,
           openTasksInitialized: true,
+          activeQuest: null,
+          questStartTime: null,
         };
       });
     } catch (error) {
@@ -246,6 +252,8 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
           ...prev,
           availableQuests: fallbackQuests,
           openTasksInitialized: true,
+          activeQuest: null,
+          questStartTime: null,
         };
       });
     }
