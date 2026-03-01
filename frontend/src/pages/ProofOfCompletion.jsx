@@ -11,13 +11,17 @@ const ProofOfCompletion = () => {
     completeQuest, 
     setUploadedImage,
     uploadedImage,
-    questStartTime 
+    questStartTime,
+    refreshAvailableQuests,
+    showToast,
   } = useGame();
 
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [denialReason, setDenialReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [timerExpired, setTimerExpired] = useState(false);
+  const [timerInitialized, setTimerInitialized] = useState(false);
 
   useEffect(() => {
     if (!activeQuest || !questStartTime) return;
@@ -27,13 +31,32 @@ const ProofOfCompletion = () => {
       const totalSeconds = activeQuest.timeLimit * 60;
       const remaining = Math.max(0, totalSeconds - elapsed);
       setTimeRemaining(remaining);
+      if (!timerInitialized) {
+        setTimerInitialized(true);
+      }
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [activeQuest, questStartTime]);
+  }, [activeQuest, questStartTime, timerInitialized]);
+
+  // Handle timer expiry - only trigger after timer has been initialized
+  useEffect(() => {
+    if (!timerInitialized || timerExpired || !activeQuest) return;
+    
+    if (timeRemaining === 0) {
+      setTimerExpired(true);
+      showToast('Time limit reached! Quest failed.', 'error');
+      
+      // Refresh quests and navigate back to open tasks
+      refreshAvailableQuests();
+      setTimeout(() => {
+        navigateTo('openTasks');
+      }, 2000);
+    }
+  }, [timeRemaining, timerInitialized, timerExpired, activeQuest, showToast, refreshAvailableQuests, navigateTo]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -177,9 +200,9 @@ const ProofOfCompletion = () => {
         <button 
   className="submit-button"
   onClick={handleSubmit}
-  disabled={isLoading}
+  disabled={isLoading || timerExpired}
 >
-  {isLoading ? 'AI is Checking...' : 'Submit Image'}
+  {isLoading ? 'AI is Checking...' : (timerExpired ? 'Time Limit Expired' : 'Submit Image')}
 </button>
       </div>
     </div>

@@ -29,11 +29,6 @@ const CompletedTasks = () => {
                   <p><strong>Reward Earned:</strong> {quest.coinReward} coins</p>
                   <p><strong>Completed:</strong> {new Date(quest.completedAt).toLocaleString()}</p>
                 </div>
-                {quest.imageUrl && (
-                  <div className="completed-task-image">
-                    <img src={quest.imageUrl} alt="Quest completion proof" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
