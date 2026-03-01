@@ -55,16 +55,18 @@ def build_prompt(_: QuestRequest | None = None) -> str:
         "- Difficulty mapping: easy, medium, hard.\n"
         "- Coin rewards: easy=3, medium=5, hard=7.\n"
         "- Vary the quests; ensure they are distinct and verifiable by a photo.\n"
-        "Some potential quest categories include:\n"
+        "Some potential quest idea include but not limited to:\n"
         "- find something with a certain color\n"
         "- find something anteater related\n"
         "- find certain plants/trees (only if gemini is able to clearly identify them)\n"
         "- find and take a picture of someone with some type of clothing (that gemini can reliably identify)\n"
         "- find a well-known building on campus"
         "Output must be only the JSON array (no Markdown, no commentary).\n"
-        "Time limit should be random number that is a multiple of 5, between the range of 5 to 60 minutes.\n"
+        "Time limit should be random number that is a multiple of 5, between the range of 5 to 60 minutes, depending on the difficulty.\n"
+        ""
         "Don't ask player to show their id, or any potentially sensitive personal info.\n"
         "Users will complete their quests by submitting an image which will be verified through AI, ensure that generated quests are not easily falsifiable or exploitable through unrelated images."
+    
     )
 
 
