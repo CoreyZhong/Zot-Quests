@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { getRandomQuests } from '../data/quests';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getRandomShopItems } from '../data/outfits';
+import {
+  fetchGameState,
+  saveCompletedQuest,
+  persistPurchaseOutfit,
+  persistEquipOutfit,
+  persistRerollShop,
+} from '../lib/gameState';
 
 const GameContext = createContext();
 
@@ -12,8 +18,19 @@ export const useGame = () => {
   return context;
 };
 
+const getDefaultGameState = (ownedOutfits = []) => ({
+  currentPage: 'landing',
+  coins: 0,
+  completedQuests: [],
+  activeQuest: null,
+  ownedOutfits: [...ownedOutfits],
+  equippedOutfits: {},
+  shopInventory: getRandomShopItems(3, ownedOutfits),
+  questStartTime: null,
+  uploadedImage: null,
+});
+
 export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseSignOut = null }) => {
-  // When Supabase user is provided, we are logged in via Supabase; otherwise fall back to localStorage mock
   const loadAuthState = () => {
     if (supabaseUser) {
       return {
@@ -21,79 +38,18 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
         currentUser: { email: supabaseUser.email, id: supabaseUser.id },
       };
     }
-    try {
-      const saved = localStorage.getItem('zotQuestsAuth');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (error) {
-      console.error('Error loading auth state:', error);
-    }
     return { isLoggedIn: false, currentUser: null };
   };
 
-  // Load initial game state from localStorage or use defaults
-  const normalizeEquippedOutfits = (savedEquippedOutfits, ownedOutfitIds = []) => {
-    if (!savedEquippedOutfits || typeof savedEquippedOutfits !== 'object') {
-      return {};
-    }
-
-    // New format: { selected: outfitId }
-    if (typeof savedEquippedOutfits.selected === 'number') {
-      const selectedId = savedEquippedOutfits.selected;
-      if (ownedOutfitIds.length === 0 || ownedOutfitIds.includes(selectedId)) {
-        return { selected: selectedId };
-      }
-      return {};
-    }
-
-    // Legacy format: { hat: 1, shirt: 6, ... } -> keep first valid item only
-    const legacyIds = Object.values(savedEquippedOutfits).filter(value => typeof value === 'number');
-    const firstOwnedLegacyId = legacyIds.find(id => ownedOutfitIds.includes(id));
-    const fallbackId = typeof firstOwnedLegacyId === 'number' ? firstOwnedLegacyId : legacyIds[0];
-
-    return typeof fallbackId === 'number' ? { selected: fallbackId } : {};
-  };
-
-  const loadGameState = () => {
-    try {
-      const saved = localStorage.getItem('zotQuestsState');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          currentPage: 'landing',
-          coins: parsed.coins || 0,
-          completedQuests: parsed.completedQuests || [],
-          activeQuest: null,
-          ownedOutfits: parsed.ownedOutfits || [],
-          equippedOutfits: normalizeEquippedOutfits(parsed.equippedOutfits, parsed.ownedOutfits || []),
-          shopInventory: getRandomShopItems(3, parsed.ownedOutfits || []),
-          questStartTime: null,
-          uploadedImage: null,
-        };
-      }
-    } catch (error) {
-      console.error('Error loading saved state:', error);
-    }
-    
-    return {
-      currentPage: 'landing',
-      coins: 0,
-      completedQuests: [],
-      activeQuest: null,
-      ownedOutfits: [],
-      equippedOutfits: {},
-      shopInventory: getRandomShopItems(3, []),
-      questStartTime: null,
-      uploadedImage: null,
-    };
-  };
-
   const [auth, setAuth] = useState(loadAuthState);
-  const [state, setState] = useState(loadGameState);
+  const [state, setState] = useState(() => ({
+    ...getDefaultGameState(),
+    gameStateLoading: true,
+  }));
   const [toast, setToast] = useState(null);
+  const fetchedUserIdRef = useRef(null);
 
-  // Keep auth in sync when supabaseUser is passed (e.g. after Supabase login)
+  // Keep auth in sync when supabaseUser is passed
   useEffect(() => {
     if (supabaseUser) {
       setAuth({
@@ -103,116 +59,63 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
     }
   }, [supabaseUser?.id]);
 
-  // Save game state to localStorage
+  // Load game state from Supabase when user is present (single fetch per user; refetch when userId changes)
   useEffect(() => {
-    // Strip image data (e.g., data URL imageUrl fields) before persisting to avoid localStorage quota issues
-    const sanitizedCompletedQuests = Array.isArray(state.completedQuests)
-      ? state.completedQuests.map(({ imageUrl, ...rest }) => rest)
-      : [];
-
-    const toSave = {
-      coins: state.coins,
-      completedQuests: sanitizedCompletedQuests,
-      ownedOutfits: state.ownedOutfits,
-      equippedOutfits: state.equippedOutfits,
-    };
-
-    try {
-      localStorage.setItem('zotQuestsState', JSON.stringify(toSave));
-    } catch (error) {
-      console.error('Error saving game state to localStorage:', error);
-      // Graceful fallback: fail silently so the app continues to function without persistence
+    const userId = supabaseUser?.id;
+    if (!userId) {
+      setState((prev) => ({ ...prev, gameStateLoading: false }));
+      return;
     }
-  }, [state.coins, state.completedQuests, state.ownedOutfits, state.equippedOutfits]);
+    if (fetchedUserIdRef.current === userId) return;
+    fetchedUserIdRef.current = userId;
 
-  // Save auth state to localStorage
+    setState((prev) => ({ ...prev, gameStateLoading: true }));
+
+    fetchGameState(userId)
+      .then(({ coins, ownedOutfits, equippedOutfits, completedQuests }) => {
+        setState((prev) => ({
+          ...prev,
+          coins,
+          ownedOutfits,
+          equippedOutfits,
+          completedQuests,
+          shopInventory: getRandomShopItems(3, ownedOutfits),
+          gameStateLoading: false,
+        }));
+      })
+      .catch((err) => {
+        console.error('Failed to load game state:', err);
+        setState((prev) => ({
+          ...getDefaultGameState(),
+          ...prev,
+          gameStateLoading: false,
+        }));
+      });
+  }, [supabaseUser?.id]);
+
+  // Reset fetched ref when user logs out so next login fetches again
   useEffect(() => {
-    try {
-      localStorage.setItem('zotQuestsAuth', JSON.stringify(auth));
-    } catch (error) {
-      console.error('Error saving auth state to localStorage:', error);
-      // Graceful fallback: authentication state will not persist across reloads if this fails
-    }
-  }, [auth]);
-
-  // Authentication Methods
-  const login = (username, password) => {
-    // Mock authentication - in future, this will call Supabase
-    if (!username || !password) {
-      return { success: false, error: 'Username and password are required' };
-    }
-    
-    try {
-      const users = JSON.parse(localStorage.getItem('zotQuestsUsers') || '{}');
-      const user = users[username];
-      
-      if (user && user.password === password) {
-        setAuth({ isLoggedIn: true, currentUser: { username } });
-        return { success: true };
-      }
-      return { success: false, error: 'Invalid username or password' };
-    } catch (error) {
-      return { success: false, error: 'Login failed' };
-    }
-  };
-
-  const signup = (username, password) => {
-    // Mock signup - in future, this will call Supabase
-    if (!username || !password) {
-      return { success: false, error: 'Username and password are required' };
-    }
-    
-    if (username.length < 3) {
-      return { success: false, error: 'Username must be at least 3 characters' };
-    }
-
-    if (password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters' };
-    }
-    
-    try {
-      const users = JSON.parse(localStorage.getItem('zotQuestsUsers') || '{}');
-      
-      if (users[username]) {
-        return { success: false, error: 'Username already exists' };
-      }
-      
-      // Store only non-sensitive metadata for the user; do not store passwords client-side
-      users[username] = { createdAt: new Date().toISOString() };
-      localStorage.setItem('zotQuestsUsers', JSON.stringify(users));
-      
-      setAuth({ isLoggedIn: true, currentUser: { username } });
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: 'Signup failed' };
-    }
-  };
+    if (!supabaseUser) fetchedUserIdRef.current = null;
+  }, [supabaseUser]);
 
   const logout = () => {
-    if (supabaseSignOut) {
-      supabaseSignOut();
-    }
+    if (supabaseSignOut) supabaseSignOut();
     setAuth({ isLoggedIn: false, currentUser: null });
-    setState(prev => ({ ...prev, currentPage: 'landing' }));
+    setState((prev) => ({ ...getDefaultGameState(), currentPage: 'landing', gameStateLoading: false }));
   };
 
-  // Navigation
   const navigateTo = (page) => {
-    setState(prev => ({ ...prev, currentPage: page }));
+    setState((prev) => ({ ...prev, currentPage: page }));
   };
 
-  // Toast Management
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
   };
 
-  const hideToast = () => {
-    setToast(null);
-  };
+  const hideToast = () => setToast(null);
 
-  // Quest Management
   const acceptQuest = (quest) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       activeQuest: quest,
       questStartTime: Date.now(),
@@ -221,69 +124,115 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
     }));
   };
 
-  const completeQuest = () => {
-    if (!state.activeQuest) return;
+  const completeQuest = async () => {
+    const userId = auth.currentUser?.id;
+    const activeQuest = state.activeQuest;
+    if (!activeQuest) return;
 
-    const questTitle = state.activeQuest.description;
-    const coinsEarned = state.activeQuest.coinReward;
+    const coinsEarned = activeQuest.coinReward;
+    const imageDataUrl = state.uploadedImage;
+
+    if (userId) {
+      try {
+        const newRow = await saveCompletedQuest(
+          userId,
+          coinsEarned,
+          {
+            id: activeQuest.id,
+            description: activeQuest.description,
+            category: activeQuest.category,
+            timeLimit: activeQuest.timeLimit,
+            coinReward: activeQuest.coinReward,
+          },
+          null
+        );
+        setState((prev) => ({
+          ...prev,
+          coins: prev.coins + coinsEarned,
+          completedQuests: [newRow, ...prev.completedQuests],
+          activeQuest: null,
+          questStartTime: null,
+          uploadedImage: null,
+          currentPage: 'landing',
+        }));
+        setTimeout(() => showToast(`Side quest completed! +${coinsEarned} coins earned`, 'success'), 100);
+      } catch (err) {
+        console.error('Failed to save completed quest:', err);
+        showToast(err?.message || 'Failed to save. Try again.', 'error');
+      }
+      return;
+    }
 
     const newCompletedQuest = {
-      ...state.activeQuest,
+      ...activeQuest,
+      id: crypto.randomUUID?.() ?? `local-${Date.now()}`,
       completedAt: new Date().toISOString(),
-      imageUrl: state.uploadedImage,
+      imageUrl: imageDataUrl,
     };
-
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      coins: prev.coins + prev.activeQuest.coinReward,
-      completedQuests: [...prev.completedQuests, newCompletedQuest],
+      coins: prev.coins + coinsEarned,
+      completedQuests: [newCompletedQuest, ...prev.completedQuests],
       activeQuest: null,
       questStartTime: null,
       uploadedImage: null,
       currentPage: 'landing',
     }));
-
-    // Show success toast after navigation completes
-    setTimeout(() => {
-      showToast(`Side quest completed! +${coinsEarned} coins earned`, 'success');
-    }, 100);
+    setTimeout(() => showToast(`Side quest completed! +${coinsEarned} coins earned`, 'success'), 100);
   };
 
   const setUploadedImage = (imageDataUrl) => {
-    setState(prev => ({ ...prev, uploadedImage: imageDataUrl }));
+    setState((prev) => ({ ...prev, uploadedImage: imageDataUrl }));
   };
 
-  // Shop & Outfit Management
   const purchaseOutfit = (outfit) => {
     if (state.coins < outfit.cost) {
       alert('Not enough coins!');
       return false;
     }
-
     if (state.ownedOutfits.includes(outfit.id)) {
       alert('You already own this outfit!');
       return false;
     }
 
-    setState(prev => ({
+    const userId = auth.currentUser?.id;
+    if (userId) {
+      try {
+        persistPurchaseOutfit(userId, outfit.id, outfit.cost, state.coins, state.ownedOutfits);
+      } catch (err) {
+        console.error('Failed to purchase outfit:', err);
+        showToast(err?.message || 'Purchase failed. Try again.', 'error');
+        return false;
+      }
+    }
+
+    setState((prev) => ({
       ...prev,
       coins: prev.coins - outfit.cost,
       ownedOutfits: [...prev.ownedOutfits, outfit.id],
-      shopInventory: prev.shopInventory.filter(item => item.id !== outfit.id),
+      shopInventory: prev.shopInventory.filter((item) => item.id !== outfit.id),
     }));
-
     return true;
   };
 
   const equipOutfit = (outfit) => {
-    setState(prev => {
-      const selectedId = prev.equippedOutfits?.selected;
-      const nextEquippedOutfits = selectedId === outfit.id
-        ? {}
-        : { selected: outfit.id };
+    const userId = auth.currentUser?.id;
+    const nextSelected = state.equippedOutfits?.selected === outfit.id ? null : outfit.id;
 
-      return { ...prev, equippedOutfits: nextEquippedOutfits };
-    });
+    if (userId) {
+      try {
+        persistEquipOutfit(userId, nextSelected);
+      } catch (err) {
+        console.error('Failed to equip outfit:', err);
+        showToast(err?.message || 'Failed to equip.', 'error');
+        return;
+      }
+    }
+
+    setState((prev) => ({
+      ...prev,
+      equippedOutfits: nextSelected != null ? { selected: nextSelected } : {},
+    }));
   };
 
   const rerollShop = () => {
@@ -291,22 +240,30 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
       alert('Not enough coins! Reroll costs 2 coins.');
       return false;
     }
-    
+
+    const userId = auth.currentUser?.id;
+    if (userId) {
+      try {
+        persistRerollShop(userId, state.coins);
+      } catch (err) {
+        console.error('Failed to reroll shop:', err);
+        showToast(err?.message || 'Reroll failed. Try again.', 'error');
+        return false;
+      }
+    }
+
     const newInventory = getRandomShopItems(3, state.ownedOutfits);
-    setState(prev => ({ 
-      ...prev, 
+    setState((prev) => ({
+      ...prev,
       coins: prev.coins - 2,
-      shopInventory: newInventory 
+      shopInventory: newInventory,
     }));
     return true;
   };
 
   const value = {
-    // Auth State
     isLoggedIn: auth.isLoggedIn,
     currentUser: auth.currentUser,
-    
-    // Game State
     currentPage: state.currentPage,
     coins: state.coins,
     completedQuests: state.completedQuests,
@@ -316,11 +273,10 @@ export const GameProvider = ({ children, supabaseUser = null, signOut: supabaseS
     shopInventory: state.shopInventory,
     questStartTime: state.questStartTime,
     uploadedImage: state.uploadedImage,
+    gameStateLoading: state.gameStateLoading ?? false,
     toast,
-    
-    // Auth Actions
-    login,
-    signup,
+    login: () => ({ success: false, error: 'Use the login page.' }),
+    signup: () => ({ success: false, error: 'Use the signup page.' }),
     logout,
     navigateTo,
     acceptQuest,
