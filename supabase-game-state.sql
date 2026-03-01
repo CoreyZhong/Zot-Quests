@@ -3,10 +3,11 @@
 -- Designed so leaderboards can query public.leaderboard_view and image verification
 -- can store proof URLs in completed_quests.proof_image_path.
 
--- One row per user: coins, equipped outfit, owned outfit IDs
+-- One row per user: coins (current balance), coins_earned_lifetime (for leaderboard), outfits
 create table if not exists public.user_game_state (
   user_id uuid primary key references auth.users(id) on delete cascade,
   coins integer not null default 0,
+  coins_earned_lifetime integer not null default 0,
   equipped_outfit_id integer null,
   owned_outfit_ids integer[] not null default '{}',
   updated_at timestamptz not null default now()
@@ -58,13 +59,13 @@ create policy "Authenticated can read completed counts for leaderboard"
   to authenticated
   using (true);
 
--- Leaderboard-ready view: join profiles + user_game_state for display name and coins.
--- For leaderboards, frontend can: select * from leaderboard_view order by coins desc limit 50;
+-- Leaderboard-ready view: ranked by coins_earned_lifetime (so spending doesn't lower rank).
 create or replace view public.leaderboard_view as
   select
     p.id,
     p.username,
     coalesce(g.coins, 0) as coins,
+    coalesce(g.coins_earned_lifetime, 0) as coins_earned_lifetime,
     (select count(*) from public.completed_quests c where c.user_id = p.id) as completed_count
   from public.profiles p
   left join public.user_game_state g on g.user_id = p.id;

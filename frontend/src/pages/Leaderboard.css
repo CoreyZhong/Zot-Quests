@@ -1,5 +1,38 @@
 /* Leaderboard Page Styles */
 
+
+.leaderboard-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.leaderboard-tab {
+  padding: 0.6rem 1.25rem;
+  border: 2px solid rgba(102, 126, 234, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+
+.leaderboard-tab-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.leaderboard-tab-active:hover {
+  background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+  color: white;
+}
+
 .leaderboard-content {
   max-width: 1000px;
   margin: 0 auto;
@@ -14,6 +47,19 @@
   font-size: 1.1rem;
 }
 
+.leaderboard-table-fade {
+  animation: leaderboard-fade-in 0.35s ease-out;
+}
+
+@keyframes leaderboard-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .leaderboard-table {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 15px;
@@ -23,7 +69,7 @@
 
 .leaderboard-header {
   display: grid;
-  grid-template-columns: 100px 1fr 150px 180px;
+  grid-template-columns: 100px 1fr 180px;
   gap: 20px;
   padding: 1.5rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -42,11 +88,7 @@
   padding-left: 1rem;
 }
 
-.leaderboard-coins {
-  text-align: center;
-}
-
-.leaderboard-completed {
+.leaderboard-value {
   text-align: center;
 }
 
@@ -59,7 +101,7 @@
 
 .leaderboard-row {
   display: grid;
-  grid-template-columns: 100px 1fr 150px 180px;
+  grid-template-columns: 100px 1fr 180px;
   gap: 20px;
   padding: 1.25rem 1.5rem;
   align-items: center;
@@ -116,21 +158,27 @@
   color: #2c3e50;
 }
 
-.leaderboard-coins {
+.leaderboard-value {
   font-weight: 600;
   color: #f39c12;
   font-size: 1.1rem;
 }
 
-.leaderboard-completed {
+/* Quests completed tab: value column in blue */
+.leaderboard-table-quests .leaderboard-header .leaderboard-value,
+.leaderboard-table-quests .leaderboard-row .leaderboard-value {
   color: #667eea;
-  font-weight: 500;
 }
 
 @media (max-width: 768px) {
+  .leaderboard-tabs {
+    flex-wrap: wrap;
+    padding: 0 1rem;
+  }
+
   .leaderboard-header,
   .leaderboard-row {
-    grid-template-columns: 60px 1fr 100px 100px;
+    grid-template-columns: 60px 1fr 100px;
     gap: 10px;
     padding: 1rem;
   }

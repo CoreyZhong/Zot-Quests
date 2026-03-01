@@ -45,7 +45,7 @@ export async function fetchGameState(userId) {
   if (!userId) throw new Error('userId is required');
 
   const [{ data: stateRow, error: stateError }, { data: questRows, error: questError }] = await Promise.all([
-    supabase.from('user_game_state').select('coins, equipped_outfit_id, owned_outfit_ids').eq('user_id', userId).maybeSingle(),
+    supabase.from('user_game_state').select('coins, coins_earned_lifetime, equipped_outfit_id, owned_outfit_ids').eq('user_id', userId).maybeSingle(),
     supabase.from('completed_quests').select('id, quest_id, description, category, time_limit, coin_reward, completed_at, proof_image_path').eq('user_id', userId).order('completed_at', { ascending: false }),
   ]);
 
@@ -55,7 +55,7 @@ export async function fetchGameState(userId) {
   const partial = mapRowToGameState(stateRow);
   if (!partial) {
     await supabase.from('user_game_state').upsert({ user_id: userId }, { onConflict: 'user_id' });
-    const { data: newRow, error: selectErr } = await supabase.from('user_game_state').select('coins, equipped_outfit_id, owned_outfit_ids').eq('user_id', userId).single();
+    const { data: newRow, error: selectErr } = await supabase.from('user_game_state').select('coins, coins_earned_lifetime, equipped_outfit_id, owned_outfit_ids').eq('user_id', userId).single();
     if (selectErr) throw new Error(selectErr.message || 'Failed to load game state');
     const mapped = mapRowToGameState(newRow);
     return {
@@ -110,15 +110,28 @@ export async function saveCompletedQuest(userId, coinsToAdd, quest, proofImagePa
 }
 
 /**
- * Update coins after completing a quest (single atomic-style update: increment by coinsToAdd).
- * Use after inserting completed_quests row.
+ * Update coins and coins_earned_lifetime after completing a quest.
+ * Leaderboard ranks by coins_earned_lifetime so spending doesn't lower rank.
  */
 export async function addCoins(userId, coinsToAdd) {
   if (!userId) throw new Error('userId is required');
-  const { data: row } = await supabase.from('user_game_state').select('coins').eq('user_id', userId).single();
+  const { data: row } = await supabase
+    .from('user_game_state')
+    .select('coins, coins_earned_lifetime')
+    .eq('user_id', userId)
+    .single();
   const current = row?.coins ?? 0;
+  const currentLifetime = row?.coins_earned_lifetime ?? 0;
   const newCoins = current + coinsToAdd;
-  const { error } = await supabase.from('user_game_state').update({ coins: newCoins, updated_at: new Date().toISOString() }).eq('user_id', userId);
+  const newLifetime = currentLifetime + coinsToAdd;
+  const { error } = await supabase
+    .from('user_game_state')
+    .update({
+      coins: newCoins,
+      coins_earned_lifetime: newLifetime,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
   if (error) throw new Error(error.message || 'Failed to update coins');
 }
 
@@ -182,14 +195,16 @@ export async function persistRerollShop(userId, currentCoins) {
 }
 
 /**
- * Fetch leaderboard (username, coins, completed_count). Use for a future leaderboard page.
- * Requires RLS policies that allow authenticated users to read leaderboard_view.
+ * Fetch leaderboard with optional sort.
+ * @param {number} limit
+ * @param {'coins_earned_lifetime'|'completed_count'} sortBy - rank by coins earned (lifetime) or quests completed
  */
-export async function fetchLeaderboard(limit = 50) {
+export async function fetchLeaderboard(limit = 50, sortBy = 'coins_earned_lifetime') {
+  const orderColumn = sortBy === 'completed_count' ? 'completed_count' : 'coins_earned_lifetime';
   const { data, error } = await supabase
     .from('leaderboard_view')
-    .select('id, username, coins, completed_count')
-    .order('coins', { ascending: false })
+    .select('id, username, coins, coins_earned_lifetime, completed_count')
+    .order(orderColumn, { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message || 'Failed to load leaderboard');
   return data ?? [];
