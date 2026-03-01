@@ -14,18 +14,21 @@ from pydantic import BaseModel
 from google import genai
 from starlette.concurrency import run_in_threadpool
 
+# model and env key names; debug mode enabled by env var
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 KEY_ENV = "QUEST_GENERATION_GEMINI_API_KEY"
 DEBUG_MODE = os.getenv("QUEST_DEBUG", "false").lower() in ("1", "true", "yes")
 
+# logger for warnings and debug output
 logger = logging.getLogger(__name__)
 
-# Thread-safe lazy singleton so we don't re-instantiate the client on every request.
+# thread-safe lazy initialization of GenAI client
 _client_lock = threading.Lock()
 _genai_client: genai.Client | None = None
 
 
 def _get_client() -> genai.Client:
+    """Return a shared GenAI client instance, constructing it if needed."""
     global _genai_client
     if _genai_client is not None:
         return _genai_client
@@ -40,12 +43,14 @@ def _get_client() -> genai.Client:
 
 
 class QuestRequest(BaseModel):
+    """Schema for quest generation parameters sent from the frontend."""
     category: str
     timeLimitMinutes: int
     difficulty: str
 
 
 def build_prompt(req: QuestRequest) -> str:
+    """Construct the natural language prompt sent to the Gemini model."""
     return (
         "Respond with ONLY a single valid JSON array of 3 quest objects and nothing else.\n"
         "You are generating fun, safe side quests for UCI students.\n"
@@ -71,6 +76,7 @@ def build_prompt(req: QuestRequest) -> str:
 
 
 def _extract_text_from_resp(resp: Any) -> str:
+    """Pull raw text out of various response object shapes."""
     if hasattr(resp, "text") and resp.text:
         return resp.text
     try:
@@ -80,6 +86,7 @@ def _extract_text_from_resp(resp: Any) -> str:
 
 
 def _parse_json_from_text(text: str) -> Any:
+    """Find and validate quest JSON inside arbitrary text."""
     def _is_valid_quests(parsed: Any) -> bool:
         required = {"title", "description", "verificationPrompt"}
         if isinstance(parsed, list):
@@ -138,10 +145,7 @@ def _parse_json_from_text(text: str) -> Any:
 
 
 async def generate_quests(body: QuestRequest) -> list:
-    """
-    Call Gemini to generate quests. Returns list of quest dicts.
-    Raises ValueError for missing API key or parse failure; lets other exceptions propagate.
-    """
+    """Invoke the model and return parsed list of quests."""
     client = _get_client()
     prompt = build_prompt(body)
 

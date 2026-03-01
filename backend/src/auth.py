@@ -1,18 +1,24 @@
+# FastAPI imports for dependencies, errors, and status codes.
 from fastapi import Depends, HTTPException, status
+# bearer-token auth; auto_error=False prevents automatic 401.
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+# library for decoding JWTs issued by Supabase (which uses HS256).
 from jose import JWTError, jwt
 import os
 
 
+# security dependency used in routes to fetch credentials.
 security = HTTPBearer(auto_error=False)
 
 
 class CurrentUser:
-    """
-    Represents the authenticated Supabase user.
+    """Tiny wrapper representing an authenticated user.
 
-    The frontend should authenticate with Supabase directly and send the Supabase
-    access token to this API in the `Authorization: Bearer <token>` header.
+    We only care about the user's unique ID at the moment. Supabase
+    issues a JWT containing this in the ``sub`` claim (or ``user_id``),
+    which we extract and expose via this simple object.
+
+    Other user attributes could be added later if needed.
     """
 
     def __init__(self, user_id: str):
@@ -20,6 +26,12 @@ class CurrentUser:
 
 
 def _get_supabase_jwt_secret() -> str:
+    """Load the JWT signing secret from the environment.
+
+    Supabase uses a shared secret for HS256 tokens; our backend must use the
+    same value to verify any bearer token presented by the client. During
+    development this lives in ``.env`` and is loaded by ``dotenv``.
+    """
     secret = os.getenv("SUPABASE_JWT_SECRET")
     if not secret:
         # In production this must match the JWT secret from your Supabase project.
@@ -30,12 +42,15 @@ def _get_supabase_jwt_secret() -> str:
 def get_current_user(
     creds: HTTPAuthorizationCredentials = Depends(security),
 ) -> CurrentUser | None:
-    """
-    Validate the Supabase access token and return the current user.
+    """Dependency that validates a Supabase JWT and returns a user object.
 
-    When called without credentials (e.g. during local development) this
-    function will simply return ``None`` instead of raising a 401 error. Call
-    sites can add their own logic to handle anonymous users.
+    If no credentials are supplied the function returns ``None`` instead of
+    raising an error. this makes it easy to leave routes unprotected in
+    development while still allowing handlers to inspect ``current_user`` if
+    present.
+
+    The token is decoded and verified using the HS256 secret obtained above.
+    Any decoding error or missing required claim results in a 401 response.
     """
 
     # HTTPBearer(auto_error=False) makes ``creds`` None when no header is
